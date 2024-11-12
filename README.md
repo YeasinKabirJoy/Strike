@@ -1,2 +1,2 @@
-# Strike-
+# Strike
 Chat App
