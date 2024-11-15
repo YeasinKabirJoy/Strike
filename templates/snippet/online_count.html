@@ -1,0 +1,7 @@
+<span id="online-count" hx-swap-oob="outerHTML">{{ online_count }}</span>
+
+{% if online_count %}
+    <div id="online-icon" class="bg-success rounded-circle" style="width: 10px; height: 10px;"></div>
+{% else %}
+    <div id="online-icon" class="bg-secondary rounded-circle" style="width: 10px; height: 10px;"></div>
+{% endif %}

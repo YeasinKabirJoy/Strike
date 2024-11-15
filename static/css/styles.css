@@ -1,6 +1,13 @@
 body{
     margin-top:20px;
     padding:20px;
+    background-color: #1E201E;
+}
+#chat-container{
+    background-color: #3C3D37;
+}
+nav{
+    background-color: #3C3D37;
 }
 
 .chat-online {
@@ -11,32 +18,45 @@ body{
     color: #e4606d
 }
 
-.chat-messages {
-    display: flex;
-    flex-direction: column;
-    max-height: 400px;
-    overflow-y: scroll
-}
-
 .panel{
     max-height: 500px;
     overflow-y: scroll
 }
 
+.chat-messages {
+    display: flex;
+    flex-direction: column;
+    max-height: 400px;
+    overflow-y: scroll;
+}
+
 .chat-message-left,
 .chat-message-right {
     display: flex;
-    flex-shrink: 0
+    align-items: flex-start;
+    flex-shrink: 0;
+    width: 100%;
 }
 
 .chat-message-left {
-    margin-right: auto
+    justify-content: flex-start;
+}
+.chat-message-left .under {
+    margin-left: 1rem; /* Adjusts timestamp to align with the left side of the message bubble */
 }
 
 .chat-message-right {
-    flex-direction: row-reverse;
-    margin-left: auto
+    justify-content: flex-end;
 }
+
+.under {
+    font-size: 0.8rem;
+    color: #6c757d; /* Muted color for timestamp */
+    margin-top: 4px;
+    text-align: left; /* Ensure left alignment */
+}
+
+
 .py-3 {
     padding-top: 1rem!important;
     padding-bottom: 1rem!important;
@@ -50,4 +70,21 @@ body{
 }
 .border-top {
     border-top: 1px solid #dee2e6!important;
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;        /* Start with 0 opacity */
+        transform: translateY(20px); /* Start 20px below its normal position */
+    }
+    100% {
+        opacity: 1;        /* End with full opacity */
+        transform: translateY(0);   /* Move to its normal position */
+    }
+}
+
+/* Apply the animation to the element */
+.fade-in-up {
+    animation: fadeInUp 1s ease-out; /* 1s duration, ease-out timing function */
+    animation-fill-mode: both; /* Retain the final state after the animation ends */
 }
