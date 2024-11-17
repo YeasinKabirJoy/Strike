@@ -1,0 +1,89 @@
+#chat-container{
+    background-color: #3C3D37;
+    min-height: 550px; /* Ensure it doesn't shrink below 400px */
+    max-height: 550px;
+}
+
+.chat-online {
+    color: #34ce57
+}
+
+.chat-offline {
+    color: #e4606d
+}
+
+.panel{
+    min-height: 500px; /* Ensure it doesn't shrink below 400px */
+    max-height: 500px;
+    overflow-y: scroll; /* Enable scrolling when content exceeds max-height */
+
+}
+
+.chat-messages {
+    display: flex;
+    flex-direction: column;
+    min-height: 400px; /* Ensure it doesn't shrink below 400px */
+    max-height: 400px;
+    overflow-y: auto; /* Enable scrolling when content exceeds max-height */
+}
+
+.chat-message-left,
+.chat-message-right {
+    display: flex;
+    align-items: flex-start;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.chat-message-left {
+    justify-content: flex-start;
+}
+.chat-message-left .under {
+    margin-left: 1rem; /* Adjusts timestamp to align with the left side of the message bubble */
+}
+
+.chat-message-right {
+    justify-content: flex-end;
+}
+
+.under {
+    font-size: 0.8rem;
+    color: #6c757d; /* Muted color for timestamp */
+    margin-top: 4px;
+    text-align: left; /* Ensure left alignment */
+}
+
+
+.py-3 {
+    padding-top: 1rem!important;
+    padding-bottom: 1rem!important;
+}
+.px-4 {
+    padding-right: 1.5rem!important;
+    padding-left: 1.5rem!important;
+}
+.flex-grow-0 {
+    flex-grow: 0!important;
+}
+.border-top {
+    border-top: 1px solid #dee2e6!important;
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;        /* Start with 0 opacity */
+        transform: translateY(20px); /* Start 20px below its normal position */
+    }
+    100% {
+        opacity: 1;        /* End with full opacity */
+        transform: translateY(0);   /* Move to its normal position */
+    }
+}
+
+/* Apply the animation to the element */
+.fade-in-up {
+    animation: fadeInUp 1s ease-out; /* 1s duration, ease-out timing function */
+    animation-fill-mode: both; /* Retain the final state after the animation ends */
+}
+
+

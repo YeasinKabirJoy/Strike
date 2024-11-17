@@ -1,0 +1,47 @@
+{% extends 'layouts/a_layout.html' %}
+{% load static %}
+
+      {% block css %}
+          <link type="text/css" href="{% static 'css/chat.css' %}" rel="stylesheet">
+      {% endblock css %}
+
+{% block content %}
+    <main  class="content">
+    <div class="container p-0">
+
+		<div id="chat-container" class="card">
+			<div class="row g-0">
+				<div class="col-12 col-lg-5 col-xl-3 border-right panel">
+
+					<div class="px-4 d-none d-md-block">
+						<div class="d-flex align-items-center">
+							<div class="flex-grow-1">
+								<input type="text" class="form-control my-3" placeholder="Search...">
+							</div>
+						</div>
+					</div>
+
+					{% for chatroom in user.chat_groups.all %}
+                        {% if chatroom.is_private %}
+                            {% for member in chatroom.members.all %}
+                                {% if member != user %}
+                                    {% include 'snippet/chat-members.html' %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+					<hr class="d-block d-lg-none mt-1 mb-0">
+				</div>
+
+
+				<div class="col-12 col-lg-7 col-xl-9 position-relative">
+                   <div class="" style="position: absolute; top: 30%; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center;">
+                        <img src="{% static 'images/logo.png' %}" height="100px">
+                        <p class="text-white">LETS STRIKE!</p>
+                   </div>
+                </div>
+			</div>
+		</div>
+	</div>
+</main>
+{% endblock content %}

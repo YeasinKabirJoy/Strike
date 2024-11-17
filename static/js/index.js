@@ -8,7 +8,7 @@
     // htmx:afterSwap,afterRequest
     // HTMX event listener for when the request is finished and the content is swapped
     document.body.addEventListener('htmx:wsAfterMessage', function(event) {
-        console.log('youuu')
+
            const chatContainer = document.getElementById('chat-messages');
             if (chatContainer) {
                 chatContainer.scrollTop = chatContainer.scrollHeight;
