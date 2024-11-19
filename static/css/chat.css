@@ -2,6 +2,7 @@
     background-color: #3C3D37;
     min-height: 550px; /* Ensure it doesn't shrink below 400px */
     max-height: 550px;
+    margin-top: 20px;
 }
 
 .chat-online {

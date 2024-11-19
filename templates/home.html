@@ -21,15 +21,21 @@
 						</div>
 					</div>
 
-					{% for chatroom in user.chat_groups.all %}
+					<div id="chatroom-container">
+                            {% for chatroom in user.chat_groups.all %}
                         {% if chatroom.is_private %}
                             {% for member in chatroom.members.all %}
                                 {% if member != user %}
                                     {% include 'snippet/chat-members.html' %}
                                 {% endif %}
                             {% endfor %}
+                         {% elif chatroom.groupchat_name %}
+                            {% include 'snippet/groupchat_members.html' %}
                         {% endif %}
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
+
+
 					<hr class="d-block d-lg-none mt-1 mb-0">
 				</div>
 

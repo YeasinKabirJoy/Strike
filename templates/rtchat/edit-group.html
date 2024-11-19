@@ -1,0 +1,113 @@
+{% extends 'layouts/a_layout.html' %}
+{% load static %}
+{% block css %}
+    <link type="text/css" href="{% static 'css/group.css' %}" rel="stylesheet">
+{% endblock css %}
+{% block content %}
+
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">{{ group.groupchat_name }}</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Delete Group?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <a href="{% url 'group-delete' group.name %}" type="button" class="btn btn-danger">Confirm</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<div class="container mt-5">
+        <div class="card">
+            <div class="card-header text-white">
+                {{ group.groupchat_name }} ({{ group.members.count }} Members)
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                {% csrf_token %}
+                    <!-- Group Name -->
+                    <div class="mb-3">
+                        <label class="form-label">Group Name</label>
+                        {{ form.groupchat_name }}
+                    </div>
+
+                    <!-- Multi-select Checkboxes -->
+                    <div class="mb-3 members">
+                        <label class="form-label">Members (Admin: {{ group.admin.username }})</label>
+                        {% for member in group.members.all %}
+                            {% if member == user %}
+                                <div class="form-check custom-checkbox">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="remove-members"
+                                    id="{{ member.username }}"
+                                    value="{{ member.id }}"
+                                    disabled
+                                >
+                                <label class="form-check-label" for="{{ member.username }}">
+                                    <span class="unchecked-icon"><i class="fas fa-check-square"></i></span>
+                                    <span class="checked-icon"><i class="fas fa-square-xmark"></i></span>
+                                    {{ member.username }} (You)
+                                </label>
+                            </div>
+                            {% else %}
+                                <div class="form-check custom-checkbox">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="remove-members"
+                                    id="{{ member.username }}"
+                                    value="{{ member.id }}">
+                                <label class="form-check-label" for="{{ member.username }}">
+                                    <span class="unchecked-icon"><i class="fas fa-check-square"></i></span>
+                                    <span class="checked-icon"><i class="fas fa-square-xmark"></i></span>
+                                    {{ member.username }}
+                                </label>
+                            </div>
+                            {% endif %}
+
+                        {% endfor %}
+                    </div>
+
+
+                  <div class="mb-3 members">
+                        <label class="form-label">Requests</label>
+                        {% for member in group.groupchatrequest.request.all %}
+                                <div class="form-check custom-checkbox">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="request-members"
+                                    id="{{ member.username }}"
+                                    value="{{ member.id }}">
+                                <label class="form-check-label" for="{{ member.username }}">
+                                    <span class="unchecked-icon" style="color: #ec2f34"><i class="fas fa-square-xmark"></i></span>
+                                    <span class="checked-icon" style="color: #28a745"><i class="fas fa-check-square"></i></span>
+                                    {{ member.username }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-success">Update</button>
+                    <a href="{% url 'chatroom' group.name %}" class="btn btn-secondary">Back to Group</a>
+
+                </form>
+               <button class="btn btn-danger btn-lg mt-3" data-toggle="modal" data-target="#exampleModal">Delete Group</button>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}

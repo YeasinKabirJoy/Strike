@@ -1,12 +1,20 @@
 body{
-    margin-top:20px;
-    padding:20px;
+    margin-top:10px;
+    padding:10px;
     background-color: #1E201E;
 }
 
 nav {
-    background-color: red;
+    background-color: #677D6A;
     position: relative; /* or 'sticky' if needed */
     z-index: 10; /* Ensure nav is on top */
 }
 
+.dropdown-toggle::after {
+      display: none; /* This hides the arrow */
+  }
+.bootdey{
+    margin-top:20px;
+    background:#3C3D37;
+    color:white;
+}

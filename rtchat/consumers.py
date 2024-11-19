@@ -11,7 +11,13 @@ class ChatroomConsumer(WebsocketConsumer):
         self.user = self.scope['user']
         self.chatroom_name = self.scope['url_route']['kwargs']['chatroom_name']
         self.chatroom = get_object_or_404(ChatGroup, name=self.chatroom_name)
+        self.other_member = None
+        if self.chatroom.is_private:
+            for member in self.chatroom.members.all():
+                if member != self.user:
+                    self.other_member = member
         async_to_sync(self.channel_layer.group_add)(self.chatroom_name, self.channel_name)
+
 
         if self.user not in self.chatroom.online_users.all():
             self.chatroom.online_users.add(self.user)
@@ -36,7 +42,9 @@ class ChatroomConsumer(WebsocketConsumer):
         )
         event = {
             'type': 'message_handler',
-            'chat': chat
+            'chat': chat,
+            'chatroom':self.chatroom,
+            'other_member':self.other_member
         }
 
         async_to_sync(self.channel_layer.group_send)(
@@ -45,9 +53,14 @@ class ChatroomConsumer(WebsocketConsumer):
 
     def message_handler(self, event):
         chat = event['chat']
+        chatroom = event['chatroom']
+        other_member = event['other_member']
         context = {
             'chat': chat,
-            'user': self.user
+            'user': self.user,
+            'chatroom':chatroom,
+            'other_member':other_member
+
         }
         html = render_to_string('../templates/snippet/message_ws.html', context)
         self.send(text_data=html)

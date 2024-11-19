@@ -35,3 +35,10 @@ class Profile(models.Model):
             user_name = self.user.username
 
         return user_name
+
+
+# class Connections(models.Model):
+#     user = models.ForeignKey(User,on_delete=models.CASCADE,related_name='connections')
+#     group = models.ForeignKey()
+#     is_group = models.BooleanField(default=False)
+#     is_private = models.BooleanField(default=False)

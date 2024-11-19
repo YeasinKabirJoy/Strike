@@ -1,5 +1,5 @@
 from django import forms
-from .models import GroupMessage
+from .models import GroupMessage,ChatGroup
 
 
 class GroupChatInputForm(forms.ModelForm):
@@ -9,4 +9,13 @@ class GroupChatInputForm(forms.ModelForm):
 
         widgets = {
             'message': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+class GroupCreationForm(forms.ModelForm):
+    class Meta:
+        model = ChatGroup
+        fields = ['groupchat_name']
+        widgets = {
+            'groupchat_name': forms.TextInput(attrs={'class': 'form-control','placeholder':'Group Name'}),
         }

@@ -4,10 +4,10 @@
                                         <img src="{{ user.profile.avatar }}" class="rounded-circle ml-2" alt="Chris Wood" width="40" height="40">
                                         <div>
                                             <div class="flex-shrink-1 bg-light rounded py-2 px-3 mr-3">
-                                                <div class="font-weight-bold mb-1">You</div>
+                                                <div class="font-weight-bold font-italic mb-1">You</div>
                                                 {{ chat.message }}
                                             </div>
-                                            <div class="under text-muted small mt-1">@{{ chat.sender.username}}</div> <!-- Left-aligned timestamp -->
+                                            <div class="under text-muted text-white small mt-1">@{{ chat.sender.username}}</div> <!-- Left-aligned timestamp -->
                                         </div>
                                     </div>
                                 {% else %}
@@ -16,7 +16,7 @@
                                         <img src="{{ chat.sender.profile.avatar }}" class="rounded-circle mr-2" alt="Sharon Lessman" width="40" height="40">
                                         <div>
                                             <div class="flex-shrink-1 bg-light rounded py-2 px-3 ml-3">
-                                                <div class="font-weight-bold mb-1">{{ chat.sender.profile.get_name }}</div>
+                                                <div class="font-weight-bold font-italic mb-1">{{ chat.sender.profile.get_name }}</div>
                                                 {{ chat.message }}
                                             </div>
                                             <div class="under text-muted small mt-1">@{{ chat.sender.username }}</div> <!-- Left-aligned timestamp -->

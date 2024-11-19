@@ -11,12 +11,12 @@
       <ul class="navbar-nav mr-auto">
 
       <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-          Dropdown
+        <a class="nav-link dropdown-toggle" style="background-image: none;" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+           <img src="{{ user.profile.avatar }}" class="rounded-circle mr-1" alt="{{ user.get_name }}" width="40" height="40">
         </a>
    <div class="dropdown-menu  dropdown-menu-left">
-    <a href="{% url 'chatroom' 'public-chat' %}" class="dropdown-item" type="button">Action</a>
-    <button class="dropdown-item" type="button">Another action</button>
+    <a href="{% url 'chatroom' 'public-chat' %}" class="dropdown-item" type="button">Public Chatroom</a>
+    <a href="{% url 'group-create' %}" class="dropdown-item" type="button">Group Chat</a>
     <button class="dropdown-item" type="button">Something else here</button>
   </div>
 

@@ -11,18 +11,17 @@ def create_profile(sender,instance,created,**kwargs):
     if created:
         Profile.objects.create(
             user=user,
-            email=user.email
         )
-    else:
-        profile = user.profile
-        profile.email = user.email
-        profile.save()
+    # else:
+    #     profile = user.profile
+    #     profile.email = user.email
+    #     profile.save()
 
 
-@receiver(post_save,sender=Profile)
-def update_user(sender,instance,created,**kwargs):
-    profile = instance
-    user = profile.user
-    if not created and profile.email != user.email:
-        user.email = profile.email
-        user.save()
+# @receiver(post_save,sender=Profile)
+# def update_user(sender,instance,created,**kwargs):
+#     profile = instance
+#     user = profile.user
+#     if not created and profile.email != user.email:
+#         user.email = profile.email
+#         user.save()

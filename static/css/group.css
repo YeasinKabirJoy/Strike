@@ -1,0 +1,42 @@
+        .card-header{
+            background-color: #677D6A;
+        }
+        .members{
+            min-height: 200px; /* Ensure it doesn't shrink below 400px */
+            max-height: 300px; /* Ensure it doesn't shrink below 400px */
+            overflow-y: auto; /* Enable scrolling when content exceeds max-height */
+        }
+        /* Custom checkbox styles */
+        .custom-checkbox .form-check-input {
+            display: none; /* Hide the default checkbox */
+        }
+
+        .custom-checkbox .form-check-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            gap: 10px; /* Add space between icon and label text */
+        }
+
+        /* Default icon for unchecked state */
+        .custom-checkbox .unchecked-icon {
+            color: #28a745; /* Gray color for unchecked icon */
+            font-size: 1.5rem; /* Size of the icon */
+        }
+
+        /* Hide unchecked icon when checked */
+        .custom-checkbox .form-check-input:checked + .form-check-label .unchecked-icon {
+            display: none;
+        }
+
+        /* Show checked icon */
+        .custom-checkbox .checked-icon {
+            display: none;
+            color: #ec2f34; /* Green color for checked icon */
+            font-size: 1.5rem; /* Size of the icon */
+        }
+
+        /* Display the checked icon when checked */
+        .custom-checkbox .form-check-input:checked + .form-check-label .checked-icon {
+            display: inline-block;
+        }

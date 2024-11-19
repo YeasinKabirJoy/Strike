@@ -1,0 +1,21 @@
+{% extends 'layouts/a_layout.html' %}
+
+{% block content %}
+    <div class="container bootdey">
+        <div class="row">
+        <div class="col-md-8 col-sm-12">
+        <div class="well">
+         <form method="POST" class="form-horizontal">
+             {% csrf_token %}
+           <div style="padding:14px; margin-left: 20px" class="form-group">
+               <h4 class="mb-4">Group Name</h4>
+               {{form.groupchat_name}}
+             <button type="submit" class="btn btn-success mt-2">Let's Go</button>
+          </div>
+
+        </form>
+        </div>
+        </div>
+        </div>
+</div>
+{% endblock content %}
