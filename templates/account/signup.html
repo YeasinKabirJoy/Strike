@@ -1,7 +1,7 @@
 {% extends 'layouts/b_layout.html' %}
 
 {% block content %}
-   <div class="container">
+   <div class="container mt-4">
     <div class="row justify-content-center">
       <div class="col-md-8">
         <div class="card-group mb-0">
@@ -11,9 +11,9 @@
               <p class="text-muted">Create a account for Strike</p>
                 <form method="post">
                     {% csrf_token %}
-                    {{ form.username }}
-                    {{ form.password1 }}
-                    {{ form.password2 }}
+                    <div class="mt-2">{{ form.username }}</div>
+                    <div class="mt-2">{{ form.password1 }}</div>
+                    <div class="mt-2">{{ form.password2 }}</div>
                     <button  type="submit" class="btn btn-secondary mt-2">Welcome Onboard</button>
                 </form>
 
@@ -24,7 +24,7 @@
               <div>
                 <h2>Sign up</h2>
                 <p>Already have an account?Login now!</p>
-                <a type="button" class="btn btn-primary active mt-3">Login Now!</a>
+                <a href="{% url 'account_login' %}" type="button" class="btn btn-primary active mt-3">Login Now!</a>
               </div>
             </div>
           </div>

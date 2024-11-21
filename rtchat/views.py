@@ -9,6 +9,9 @@ from django.http.response import Http404
 User = get_user_model()
 def test(request):
     return render(request,'rtchat/group-joining-request.html')
+
+
+@login_required
 def home(request):
     return render(request,'home.html')
 

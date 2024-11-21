@@ -10,7 +10,7 @@
 }
 
 .chat-offline {
-    color: #e4606d
+    color: #9FA6B2
 }
 
 .panel{
@@ -87,4 +87,7 @@
     animation-fill-mode: both; /* Retain the final state after the animation ends */
 }
 
-
+.line{
+    border: 0;
+    border-top: 1px solid rgba(0, 0, 0, .1);
+}
