@@ -1,3 +1,6 @@
+import mimetypes
+import os
+
 from django.db import models
 import uuid
 from django.contrib.auth import get_user_model
@@ -37,15 +40,29 @@ class ChatGroup(models.Model):
 class GroupMessage(models.Model):
     group = models.ForeignKey(ChatGroup,on_delete=models.CASCADE,related_name='messages')
     sender = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
-    message = models.TextField()
+    message = models.TextField(blank=True,null=True)
+    file = models.FileField(upload_to='files/',blank=True,null=True)
     id = models.CharField(default=partial(short_uuid, length=18), max_length=18,primary_key=True, editable=False, unique=True)
 
-    def __str__(self):
-        if len(self.message)>20:
-            return f'{self.sender.username} - {self.message[:20]}. . . . .'
-        else:
-            return f'{self.sender.username} - {self.message}'
+    # def __str__(self):
+    #     if len(self.message)>20:
+    #         return f'{self.sender.username} - {self.message[:20]}. . . . .'
+    #     else:
+    #         return f'{self.sender.username} - {self.message}'
 
+    def file_type(self):
+        if not self.file:
+            return None
+        mime_type, _ = mimetypes.guess_type(self.file.url)
+        if mime_type:
+            return mime_type.split('/')[0]  # Returns 'image', 'video', etc.
+        return 'unknown'
+
+    def get_file_name(self):
+        """Returns the file name without extension."""
+        if self.file:
+            return os.path.splitext(os.path.basename(self.file.name))[0]
+        return None
 
 class GroupChatRequest(models.Model):
     group = models.OneToOneField(ChatGroup,on_delete=models.CASCADE)

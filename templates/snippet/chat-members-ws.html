@@ -1,7 +1,6 @@
 
 					<div id="{{ chatroom_name }}" class="chatroom_name" hx-swap-oob="true" >
                         <a href="" class="list-group-item list-group-item-action border-0">
-						<div class="badge bg-success float-right">2</div>
 						{% for member in members.all %}
                             {% if member != user %}
                                 <div class="d-flex align-items-start">

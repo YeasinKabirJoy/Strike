@@ -91,3 +91,25 @@
     border: 0;
     border-top: 1px solid rgba(0, 0, 0, .1);
 }
+
+.file-preview-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 5px 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.file-preview-item span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 80%;
+}
+
+.remove-file {
+    margin-left: 10px;
+}

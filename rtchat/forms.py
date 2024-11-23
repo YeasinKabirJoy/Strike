@@ -12,6 +12,14 @@ class GroupChatInputForm(forms.ModelForm):
         }
 
 
+# class GroupChatFileInputForm(forms.ModelForm):
+#     class Meta:
+#         model = GroupMessage
+#         fields = ['file']
+#         widgets = {
+#             'file': forms.FileInput(attrs={'multiple': True, 'class': 'form-control'}),
+#         }
+
 class GroupCreationForm(forms.ModelForm):
     class Meta:
         model = ChatGroup

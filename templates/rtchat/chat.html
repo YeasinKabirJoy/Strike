@@ -148,29 +148,43 @@
                                 {% include 'snippet/message.html' %}
                                 {% endfor %}
                         </div>
+
                     </div>
 
-					<div class="flex-grow-0 py-3 px-4 border-top">
-
-						<form method="post"
-{#                              hx-post="{% url 'rtchat' %}"#}
-{#                              hx-target="#rtchat-messages"#}
-{#                              hx-swap="beforeend"#}
+                    <div class="flex-grow-0 py-3 px-4 border-top">
+                        <form id="send-chat-form" method="post" enctype="multipart/form-data" class="d-flex align-items-center gap-2"
+{#                            hx-post="{% url 'chat' %}"#}
+{#                            hx-target="#rtchat-messages"#}
+{#                            hx-swap="beforeend"#}
                            hx-ext="ws"
                            ws-connect="/ws/chatroom/{{ chatroom.name }}/"
-                           ws-send
+{#                           ws-send#}
                         >
                             {% csrf_token %}
-                                <div class="input-group">
-                                    {{ form.message }}
-                                    <button type="submit" class="btn btn-primary">Send</button>
-                                </div>
-                         </form>
-					</div>
 
+                             <!-- File Input (Hidden) -->
+                            <input id="file-input" type="file" name="files" class="d-none" multiple>
+
+                            <!-- Attach File Button -->
+                            <button type="button" id="attach-button" class="btn btn-outline-light ">🔗</button>
+
+
+                            <!-- Text Input -->
+                            <input type="text" id="message-input" name="message" class="form-control mx-1" placeholder="Type a message">
+
+                            <!-- Submit Button -->
+                            <button type="submit" class="btn btn-primary">Send</button>
+                        </form>
+                    </div>
+                    <div id="files-preview" class="mt-2"></div>
 				</div>
 			</div>
 		</div>
 	</div>
 </main>
+
+<script>
+    const chatroom_name = "{{ chatroom.name |escapejs }}";
+</script>
+
 {% endblock content %}

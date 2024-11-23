@@ -3,7 +3,9 @@ from .models import ChatGroup,GroupMessage,GroupChatRequest
 from .forms import GroupChatInputForm,GroupCreationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
-from django.http.response import Http404
+from django.http.response import Http404, HttpResponse, JsonResponse
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 # Create your views here.
 
 User = get_user_model()
@@ -21,7 +23,6 @@ def chatroom(request,chatroom_name='public-chat'):
     group = get_object_or_404(ChatGroup,name=chatroom_name)
     chats = group.messages.all()
     form = GroupChatInputForm()
-
     is_private = group.is_private
     other_member = None
     groupchat_name = group.groupchat_name
@@ -54,6 +55,7 @@ def chatroom(request,chatroom_name='public-chat'):
     }
     return render(request, 'rtchat/chat.html', context)
 
+# sending chat is now handled by ws consumers
 @login_required
 def send_chat(request):
     chatroom_name = 'public-chat'
@@ -72,6 +74,38 @@ def send_chat(request):
             }
             return render(request, 'snippet/message.html', context)
 
+@login_required
+def send_chat_files(request, chatroom_name='public-chat'):
+    print('yooo')
+    if request.method == "POST":
+        group = get_object_or_404(ChatGroup, name=chatroom_name)
+        other_member = None
+        channel_layer = get_channel_layer()
+
+        # Find the other member in a private chat
+        if group.is_private:
+            for member in group.members.all():
+                if member != request.user:
+                    other_member = member
+
+        # Handle uploaded files
+        files = request.FILES.getlist("files")  # Use `getlist` to retrieve multiple files
+        for file in files:
+            message = GroupMessage.objects.create(sender=request.user, group=group, file=file)
+            event = {
+                'type': 'message_handler',
+                'chat': message,
+                'chatroom': chatroom_name,
+                'other_member': other_member
+            }
+            async_to_sync(channel_layer.group_send)(
+                chatroom_name, event
+            )
+
+        return JsonResponse({"message": "File uploaded successfully."}, status=201)
+
+    # If not POST, return an error
+    return JsonResponse({"error": "Invalid request method."}, status=400)
 @login_required
 def create_chatroom(request,username):
     user = request.user

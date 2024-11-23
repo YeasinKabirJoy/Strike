@@ -62,6 +62,7 @@ class ChatroomConsumer(WebsocketConsumer):
                 self.broadcast_sidebar_update(member.id, update_data)
 
     def message_handler(self, event):
+        print('handler')
         chat = event['chat']
         chatroom = event['chatroom']
         other_member = event['other_member']
