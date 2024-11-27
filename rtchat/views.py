@@ -10,7 +10,7 @@ from asgiref.sync import async_to_sync
 
 User = get_user_model()
 def test(request):
-    return render(request,'rtchat/group-joining-request.html')
+    return render(request,'users/search.html')
 
 
 @login_required
@@ -76,7 +76,6 @@ def send_chat(request):
 
 @login_required
 def send_chat_files(request, chatroom_name='public-chat'):
-    print('yooo')
     if request.method == "POST":
         group = get_object_or_404(ChatGroup, name=chatroom_name)
         other_member = None

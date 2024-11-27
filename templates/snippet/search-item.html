@@ -1,0 +1,20 @@
+{% for result in results %}
+    <div class="col-lg-4">
+                <div class="text-center card-box">
+                    <div class="member-card pt-2 pb-2">
+                        <div class="thumb-lg member-thumb mx-auto"><img src="{{ result.profile.avatar }}" class="rounded-circle img-thumbnail" alt="profile-image"></div>
+                        <div class="">
+                            <h4>{{ result.profile.get_name }}</h4>
+                            <p class="text-muted">@{{ result.username }}
+
+                                {% if result.profile.online_status %}
+                                    <span class="fas fa-circle small chat-online"></span>
+                                {% else %}
+                                    <span class="fas fa-circle small chat-offline"></span>
+                                {% endif %}
+                        </div>
+                        <a href="{% url 'chatroom-create' result.username %}" class="btn btn-primary mt-3 btn-rounded waves-effect w-md waves-light">Message Now</a>
+                    </div>
+                </div>
+</div>
+{% endfor %}

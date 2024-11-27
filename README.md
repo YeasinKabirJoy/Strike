@@ -28,7 +28,6 @@ The back-end of this is made with Python and Django with the help of Django-Chan
 * Real Time sidebar update to show latest connection.
 
 ### Upcoming features
-* Searching User to connect
 * Audio and Video Call
 
 

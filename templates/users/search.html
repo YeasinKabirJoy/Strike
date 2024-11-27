@@ -1,0 +1,41 @@
+{% extends 'layouts/a_layout.html' %}
+{% load static %}
+
+{% block css %}
+          <link type="text/css" href="{% static 'css/search.css' %}" rel="stylesheet">
+ {% endblock css %}
+
+{% block content %}
+
+    <div class="container bootstrap search-container">
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="well search-result">
+                <form
+                   hx-post="{% url 'user-search' %}"
+                   hx-target="#search-items"
+                   hx-swap="innerHTML"
+                >
+                    {% csrf_token %}
+                    <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="Search">
+                    <button class="btn btn-info btn-lg" type="submit">Search</button>
+               </div>
+                </form>
+            </div>
+
+    <div class="container search-result">
+
+        <div class="row row-cols-md-3" id="search-items">
+             {% include 'snippet/search-item.html' %}
+        </div>
+        <!-- end row -->
+
+    </div>
+    <!-- container -->
+
+
+        </div>
+    </div>
+</div>
+{% endblock content %}
