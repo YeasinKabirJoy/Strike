@@ -26,7 +26,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['strike-m2jv.onrender.com']
 CSRF_TRUSTED_ORIGINS = [
-    'strike-m2jv.onrender.com',        
+    'https://strike-m2jv.onrender.com',        
 ]
 
 # Application definition
