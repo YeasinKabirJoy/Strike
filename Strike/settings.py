@@ -28,7 +28,9 @@ ALLOWED_HOSTS = ['strike-m2jv.onrender.com']
 CSRF_TRUSTED_ORIGINS = [
     'https://strike-m2jv.onrender.com',        
 ]
-
+CORS_ALLOWED_ORIGINS = [
+    'https://strike-m2jv.onrender.com', 
+]
 # Application definition
 
 INSTALLED_APPS = [
