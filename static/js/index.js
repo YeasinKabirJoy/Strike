@@ -210,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             // Handle text message via WebSocket
             const textInput = form.querySelector("[name='message']");
-            const ws = new WebSocket(`ws://127.0.0.1:8000/ws/chatroom/${chatroom_name}/`);
+            const ws = new WebSocket(`ws://strike-m2jv.onrender.com/ws/chatroom/${chatroom_name}/`);
 
             ws.onopen = () => {
                 ws.send(JSON.stringify({ message: textInput.value.trim() }));
