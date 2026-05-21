@@ -9,7 +9,7 @@ Strike is Real Time Chat Application.
 
 The back-end of this is made with Python and Django with the help of Django-Channels. In the front-end Bootstrap, CSS, HTMX and Vanila JS is used. Right now the front-end is not responsive(Only full screen mode).
 
-![Default Home View](__screenshots/home.png?raw=true "Title")
+![Default Home View](__screenshots/home_page.png?raw=true "Title")
 
 ### Main features
 
