@@ -22,9 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-4vbxab7)2n@z=7rkdz=k2vs)(t$5^l@am+lrxiih@16ohr3mv#'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['strike-m2jv.onrender.com']
+ALLOWED_HOSTS = ['strike-m2jv.onrender.com','127.0.0.1']
 CSRF_TRUSTED_ORIGINS = [
     'https://strike-m2jv.onrender.com',        
 ]

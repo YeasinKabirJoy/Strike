@@ -1,49 +1,47 @@
-                                    {% if chat.sender == user %}
-
-                                    <div class="chat-message-right pb-4 d-flex align-items-start justify-content-end">
-                                        <img src="{{ user.profile.avatar }}" class="rounded-circle ml-2" alt="Chris Wood" width="40" height="40">
-                                        <div>
-                                            <div class="flex-shrink-1 bg-light rounded py-2 px-3 mr-3">
-                                                <div class="font-weight-bold font-italic mb-1">You</div>
-                                                 {% if chat.file %}
-                                                    {% if chat.file_type == "image" %}
-                                                        <img height="100" width="100" src="{{ chat.file.url }}">
-                                                    {% elif chat.file_type == "video" %}
-                                                        <video height="100" width="100" controls>
-                                                            <source src="{{ chat.file.url }}" type="video/mp4">
-                                                        </video>
-                                                    {% elif chat.file_type == "application" %}
-                                                        <a href="{{ chat.file.url }}" target="_blank">📄 {{ chat.get_file_name }}</a>
-                                                    {% endif %}
-                                                {% else %}
-                                                    {{ chat.message }}
-                                                {% endif %}
-                                            </div>
-                                            <div class="under text-muted text-white small mt-1">@{{ chat.sender.username}}</div> <!-- Left-aligned timestamp -->
-                                        </div>
-                                    </div>
-                                {% else %}
-                                    <!-- Left-aligned message -->
-                                    <div class="chat-message-left pb-4 d-flex align-items-start">
-                                        <img src="{{ chat.sender.profile.avatar }}" class="rounded-circle mr-2" alt="Sharon Lessman" width="40" height="40">
-                                        <div>
-                                            <div class="flex-shrink-1 bg-light rounded py-2 px-3 ml-3">
-                                                <div class="font-weight-bold font-italic mb-1">{{ chat.sender.profile.get_name }}</div>
-                                                {% if chat.file %}
-                                                    {% if chat.file_type == "image" %}
-                                                        <img height="100" width="100" src="{{ chat.file.url }}">
-                                                    {% elif chat.file_type == "video" %}
-                                                        <video height="100" width="100" controls>
-                                                            <source src="{{ chat.file.url }}" type="video/mp4">
-                                                        </video>
-                                                    {% elif chat.file_type == "application" %}
-                                                        <a href="{{ chat.file.url }}" target="_blank">📄 {{ chat.get_file_name }}</a>
-                                                    {% endif %}
-                                                {% else %}
-                                                    {{ chat.message }}
-                                                {% endif %}
-                                            </div>
-                                            <div class="under text-muted small mt-1">@{{ chat.sender.username }}</div> <!-- Left-aligned timestamp -->
-                                        </div>
-                                    </div>
-                                {% endif %}
+{% if chat.sender == user %}
+    <div class="chat-message-right pb-4 d-flex align-items-start justify-content-end">
+        <div>
+            <div class="text-right small mb-1 px-2 font-weight-bold" style="color: #E0E7FF; font-size: 0.8rem; letter-spacing: 0.3px;">You</div>
+            <div class="msg-bubble-right mr-2">
+                {% if chat.file %}
+                    {% if chat.file_type == "image" %}
+                        <img class="rounded my-1 shadow-sm" style="max-width: 100%; height: auto; max-height: 250px; object-fit: cover; display: block;" src="{{ chat.file.url }}">
+                    {% elif chat.file_type == "video" %}
+                        <video class="rounded my-1 shadow-sm" style="max-width: 100%; height: auto; max-height: 250px; display: block;" controls>
+                            <source src="{{ chat.file.url }}" type="video/mp4">
+                        </video>
+                    {% elif chat.file_type == "application" %}
+                        <a href="{{ chat.file.url }}" class="text-white font-weight-bold d-inline-block my-1" target="_blank">📄 {{ chat.get_file_name }}</a>
+                    {% endif %}
+                {% else %}
+                    <div class="message-text">{{ chat.message }}</div>
+                {% endif %}
+            </div>
+            <div class="under text-muted small mt-1 px-2 text-right" style="font-size: 0.75rem;">@{{ chat.sender.username }}</div>
+        </div>
+        <img src="{{ user.profile.avatar }}" class="rounded-circle ml-2 shadow-sm mt-1" style="border: 2px solid var(--accent-primary);" alt="{{ user.get_name }}" width="40" height="40">
+    </div>
+{% else %}
+    <div class="chat-message-left pb-4 d-flex align-items-start">
+        <img src="{{ chat.sender.profile.avatar }}" class="rounded-circle mr-2 shadow-sm mt-1" style="border: 2px solid #38BDF8;" alt="{{ chat.sender.profile.get_name }}" width="40" height="40">
+        <div>
+            <div class="text-left small mb-1 px-2 font-weight-bold" style="color: #38BDF8; font-size: 0.8rem; letter-spacing: 0.3px;">{{ chat.sender.profile.get_name }}</div>
+            <div class="msg-bubble-left ml-2">
+                {% if chat.file %}
+                    {% if chat.file_type == "image" %}
+                        <img class="rounded my-1 shadow-sm" style="max-width: 100%; height: auto; max-height: 250px; object-fit: cover; display: block;" src="{{ chat.file.url }}">
+                    {% elif chat.file_type == "video" %}
+                        <video class="rounded my-1 shadow-sm" style="max-width: 100%; height: auto; max-height: 250px; display: block;" controls>
+                            <source src="{{ chat.file.url }}" type="video/mp4">
+                        </video>
+                    {% elif chat.file_type == "application" %}
+                        <a href="{{ chat.file.url }}" class="text-light font-weight-bold d-inline-block my-1" target="_blank">📄 {{ chat.get_file_name }}</a>
+                    {% endif %}
+                {% else %}
+                    <div class="message-text">{{ chat.message }}</div>
+                {% endif %}
+            </div>
+            <div class="under text-muted small mt-1 px-2 text-left" style="font-size: 0.75rem;">@{{ chat.sender.username }}</div>
+        </div>
+    </div>
+{% endif %}

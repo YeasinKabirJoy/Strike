@@ -1,20 +1,268 @@
-body{
-    margin-top:10px;
-    padding:10px;
-    background-color: #1E201E;
+:root {
+    --bg-base: #0F172A; /* Slate 900 */
+    --bg-surface: #1E293B; /* Slate 800 */
+    --bg-subsurface: #0B0F19; /* Darker slate for panels */
+    --bg-hover: #334155; /* Slate 700 */
+    --accent-primary: #6366F1; /* Indigo 500 */
+    --accent-primary-hover: #4F46E5; /* Indigo 600 */
+    --accent-secondary: #38BDF8; /* Sky 400 */
+    --text-main: #F8FAFC; /* Slate 50 */
+    --text-muted: #94A3B8; /* Slate 400 */
+    --border-color: rgba(255, 255, 255, 0.08);
+    --font-main: 'Inter', sans-serif;
 }
 
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    margin-top: 10px;
+    padding: 10px;
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar for the entire app */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-base);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--bg-hover);
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-primary);
+}
+
+/* Overriding Bootstrap defaults for a dark theme */
 nav {
-    background-color: #677D6A;
-    position: relative; /* or 'sticky' if needed */
-    z-index: 10; /* Ensure nav is on top */
+    background-color: rgba(30, 41, 59, 0.8) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    position: sticky;
+    top: 15px;
+    z-index: 1000;
+    border-radius: 1rem;
+    margin: 10px auto 1.5rem auto;
+    max-width: 1140px; /* Matches Bootstrap container width perfectly */
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
 }
 
 .dropdown-toggle::after {
-      display: none; /* This hides the arrow */
-  }
-.bootdey{
-    margin-top:20px;
-    background:#3C3D37;
-    color:white;
+    display: none; /* This hides the arrow */
+}
+
+/* Modern dropdown menu styling */
+.dropdown-menu {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    padding: 0.5rem;
+}
+
+.dropdown-item {
+    color: var(--text-main) !important;
+    border-radius: 0.5rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+    background-color: var(--accent-primary) !important;
+    color: #fff !important;
+}
+
+.bootdey {
+    margin-top: 20px;
+    background: var(--bg-surface);
+    color: var(--text-main);
+    border-radius: 1rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* ==========================================
+   MODERN & FLASHY BUTTON OVERRIDES
+   ========================================== */
+
+/* Base button styling */
+.btn {
+    font-family: var(--font-main);
+    font-weight: 600 !important;
+    letter-spacing: 0.5px;
+    border-radius: 50px !important; /* Sleek pill shape */
+    padding: 0.6rem 1.5rem !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: none !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* Primary Button (Indigo/Violet Gradient Glow) */
+.btn-primary {
+    background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4) !important;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #4F46E5 0%, #4338CA 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6) !important;
+}
+
+.btn-primary:active {
+    transform: translateY(0) scale(0.97);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4) !important;
+}
+
+/* Info Button (Sky Blue / Cyan Gradient Glow) */
+.btn-info {
+    background: linear-gradient(135deg, #38BDF8 0%, #0284C7 100%) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4) !important;
+}
+
+.btn-info:hover {
+    background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(56, 189, 248, 0.6) !important;
+}
+
+.btn-info:active {
+    transform: translateY(0) scale(0.97);
+}
+
+/* Danger Button (Vibrant Crimson Gradient Glow) */
+.btn-danger {
+    background: linear-gradient(135deg, #F43F5E 0%, #E11D48 100%) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 15px rgba(244, 63, 94, 0.4) !important;
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(244, 63, 94, 0.6) !important;
+}
+
+.btn-danger:active {
+    transform: translateY(0) scale(0.97);
+}
+
+/* Success Button (Emerald Green Gradient Glow) */
+.btn-success {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6) !important;
+}
+
+/* Secondary & Light Buttons (Sleek Glassmorphic Dark) */
+.btn-secondary, .btn-light {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: var(--text-main) !important;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.btn-secondary:hover, .btn-light:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Outline Buttons (Neon Glowing Outlines) */
+.btn-outline-primary {
+    background: transparent !important;
+    color: var(--accent-primary) !important;
+    border: 2px solid var(--accent-primary) !important;
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.2) !important;
+}
+
+.btn-outline-primary:hover {
+    background: var(--accent-primary) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.5) !important;
+    transform: translateY(-2px);
+}
+
+.btn-outline-light {
+    background: transparent !important;
+    color: var(--text-main) !important;
+    border: 2px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.btn-outline-light:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    transform: translateY(-2px);
+}
+
+/* Modal styling overrides */
+.modal-content {
+    background-color: var(--bg-surface);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color);
+}
+
+.close {
+    color: var(--text-muted);
+    text-shadow: none;
+    opacity: 0.8;
+}
+
+.close:hover {
+    color: var(--text-main);
+    opacity: 1;
+}
+
+/* Sidebar list item overrides */
+.list-group-item {
+    background-color: transparent !important;
+    color: var(--text-main) !important;
+    border: none !important;
+    padding: 0.75rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.list-group-item-action:hover, .list-group-item-action:focus {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    color: var(--accent-secondary) !important;
+    border-radius: 0.75rem;
+}
+
+hr {
+    border-top: 1px solid var(--border-color);
 }

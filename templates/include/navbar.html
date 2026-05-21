@@ -1,29 +1,31 @@
 {% load static %}
-<nav class="navbar navbar-expand-lg navbar-light">
-  <div class="container">
-      <a class="navbar-brand" href="{% url 'home' %}"><img src="{% static 'images/logo.png' %}" height="50px"></a>
-  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+<nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+  <div class="container p-0">
+      <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+          <img src="{% static 'images/logo.png' %}" height="45px">
+      </a>
+      <button class="navbar-toggler border-0 shadow-none" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-  <div class="collapse navbar-collapse d-flex flex-row-reverse" id="navbarSupportedContent">
-    <div class="form-inline my-2 my-lg-0">
-      <ul class="navbar-nav mr-auto">
-
-      <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" style="background-image: none;" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-           <img src="{{ user.profile.avatar }}" class="rounded-circle mr-1" alt="{{ user.get_name }}" width="40" height="40">
-        </a>
-   <div class="dropdown-menu  dropdown-menu-left">
-    <a href="{% url 'chatroom' 'public-chat' %}" class="dropdown-item" type="button">Public Chatroom</a>
-    <a href="{% url 'group-create' %}" class="dropdown-item" type="button">Group Chat</a>
-    <a href="{% url 'profile' %}" class="dropdown-item" type="button">Profile</a>
-    <a href="{% url 'user-search' %}" class="dropdown-item" type="button">Find User</a>
-    <button class="dropdown-item" data-toggle="modal" data-target="#logoutModal">Logout</button>
-  </div>
-
-    </ul>
-    </div>
-  </div>
+      <div class="collapse navbar-collapse d-flex flex-row-reverse" id="navbarSupportedContent">
+        <div class="form-inline my-2 my-lg-0">
+          <ul class="navbar-nav mr-auto align-items-center">
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle p-0" style="background-image: none;" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                   <img src="{{ user.profile.avatar }}" class="rounded-circle mr-1 border" style="border-color: var(--accent-primary) !important;" alt="{{ user.get_name }}" width="42" height="42">
+                </a>
+                <div class="dropdown-menu dropdown-menu-right mt-2">
+                    <a href="{% url 'chatroom' 'public-chat' %}" class="dropdown-item d-flex align-items-center"><i class="fas fa-globe mr-2 text-info" style="width: 20px;"></i> Public Chatroom</a>
+                    <a href="{% url 'group-create' %}" class="dropdown-item d-flex align-items-center"><i class="fas fa-users mr-2 text-success" style="width: 20px;"></i> Group Chat</a>
+                    <a href="{% url 'profile' %}" class="dropdown-item d-flex align-items-center"><i class="fas fa-user mr-2 text-primary" style="width: 20px;"></i> Profile</a>
+                    <a href="{% url 'user-search' %}" class="dropdown-item d-flex align-items-center"><i class="fas fa-search mr-2 text-warning" style="width: 20px;"></i> Find User</a>
+                    <div class="dropdown-divider" style="border-color: var(--border-color);"></div>
+                    <button class="dropdown-item d-flex align-items-center text-danger" data-toggle="modal" data-target="#logoutModal"><i class="fas fa-sign-out-alt mr-2" style="width: 20px;"></i> Logout</button>
+                </div>
+              </li>
+          </ul>
+        </div>
+      </div>
   </div>
 </nav>
