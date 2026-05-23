@@ -143,6 +143,10 @@
 					</div>
 
                     <div class="position-relative">
+                        <div id="chat-ws-connection"
+                             hx-ext="ws"
+                             ws-connect="/ws/chatroom/{{ chatroom.name }}/">
+                        </div>
                         <div id="chat-messages" class="chat-messages p-4">
                                 {% for chat in chats %}
                                 {% include 'snippet/message.html' %}
@@ -156,8 +160,6 @@
 {#                            hx-post="{% url 'chat' %}"#}
 {#                            hx-target="#rtchat-messages"#}
 {#                            hx-swap="beforeend"#}
-                           hx-ext="ws"
-                           ws-connect="/ws/chatroom/{{ chatroom.name }}/"
 {#                           ws-send#}
                         >
                             {% csrf_token %}

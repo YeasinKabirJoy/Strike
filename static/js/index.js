@@ -17,10 +17,6 @@
                 // }, 200); // Adjust delay as needed
             }
 
-            const messageInput = document.querySelector('input[name="message"]');
-            if (messageInput) {
-                messageInput.value = '';  // Clear the input field
-            }
     });
 
 document.addEventListener("htmx:oobBeforeSwap", (event) => {
