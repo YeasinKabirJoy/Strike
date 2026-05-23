@@ -10,27 +10,65 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv(BASE_DIR / '.env')
+
+
+def env_bool(name):
+    value = os.environ.get(name)
+    if value is None:
+        raise ImproperlyConfigured(f'{name} must be set.')
+
+    value = value.strip()
+    if value == 'True':
+        return True
+    if value == 'False':
+        return False
+
+    raise ImproperlyConfigured(f'{name} must be either True or False.')
+
+
+def env_list(name, default=''):
+    value = os.environ.get(name, default)
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-4vbxab7)2n@z=7rkdz=k2vs)(t$5^l@am+lrxiih@16ohr3mv#'
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env_bool('DEBUG')
 
-ALLOWED_HOSTS = ['strike-m2jv.onrender.com','127.0.0.1']
-CSRF_TRUSTED_ORIGINS = [
-    'https://strike-m2jv.onrender.com',        
-]
-CORS_ALLOWED_ORIGINS = [
-    'https://strike-m2jv.onrender.com', 
-]
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured('SECRET_KEY must be set.')
+
+ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', '127.0.0.1,localhost')
+if not DEBUG and not ALLOWED_HOSTS:
+    raise ImproperlyConfigured('ALLOWED_HOSTS must be set when DEBUG is False.')
+
+CSRF_TRUSTED_ORIGINS = env_list('CSRF_TRUSTED_ORIGINS')
+CORS_ALLOWED_ORIGINS = env_list('CORS_ALLOWED_ORIGINS')
+
+if env_bool('PRETTY_ERRORS'):
+    import pretty_errors
+
+    pretty_errors.configure(
+        display_link=True,
+        lines_before=2,
+        lines_after=1,
+        display_locals=env_bool('PRETTY_ERRORS_SHOW_LOCALS'),
+    )
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -45,8 +83,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # Created Apps
-    'rtchat.apps.RtchatConfig',
-    'users.apps.UsersConfig',
+    'apps.rtchat.apps.RtchatConfig',
+    'apps.users.apps.UsersConfig',
 
     # 3rd party Apps
     'django_htmx',
@@ -80,15 +118,15 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 ACCOUNT_FORMS = {
-    'login': 'users.forms.CustomLoginForm',
-    'signup': 'users.forms.CustomSignupForm',
+    'login': 'apps.users.forms.CustomLoginForm',
+    'signup': 'apps.users.forms.CustomSignupForm',
 
 }
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
-ROOT_URLCONF = 'Strike.urls'
+ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [
     {
@@ -109,8 +147,8 @@ TEMPLATES = [
     },
 ]
 
-# WSGI_APPLICATION = 'Strike.wsgi.application'
-ASGI_APPLICATION = 'Strike.asgi.application'
+# WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer'

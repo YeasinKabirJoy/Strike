@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.http.response import Http404, HttpResponse, JsonResponse
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from .consumers import can_access_chatroom
 # Create your views here.
 
 User = get_user_model()
@@ -78,6 +79,9 @@ def send_chat(request):
 def send_chat_files(request, chatroom_name='public-chat'):
     if request.method == "POST":
         group = get_object_or_404(ChatGroup, name=chatroom_name)
+        if not can_access_chatroom(request.user, group):
+            raise Http404()
+
         other_member = None
         channel_layer = get_channel_layer()
 
@@ -93,9 +97,9 @@ def send_chat_files(request, chatroom_name='public-chat'):
             message = GroupMessage.objects.create(sender=request.user, group=group, file=file)
             event = {
                 'type': 'message_handler',
-                'chat': message,
-                'chatroom': chatroom_name,
-                'other_member': other_member
+                'message_id': message.id,
+                'chatroom_id': str(group.id),
+                'other_member_id': other_member.id if other_member else None
             }
             async_to_sync(channel_layer.group_send)(
                 chatroom_name, event

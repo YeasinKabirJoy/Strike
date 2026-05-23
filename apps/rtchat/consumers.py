@@ -1,10 +1,23 @@
 from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from .models import ChatGroup, GroupMessage
 import json
 from django.template.loader import render_to_string
 from asgiref.sync import async_to_sync
+
+User = get_user_model()
+
+
+def can_access_chatroom(user, chatroom):
+    if not user.is_authenticated:
+        return False
+
+    if chatroom.name == 'public-chat':
+        return True
+
+    return chatroom.members.filter(id=user.id).exists()
 
 
 class ChatroomConsumer(WebsocketConsumer):
@@ -12,6 +25,10 @@ class ChatroomConsumer(WebsocketConsumer):
         self.user = self.scope['user']
         self.chatroom_name = self.scope['url_route']['kwargs']['chatroom_name']
         self.chatroom = get_object_or_404(ChatGroup, name=self.chatroom_name)
+        if not can_access_chatroom(self.user, self.chatroom):
+            self.close()
+            return
+
         self.other_member = None
         if self.chatroom.is_private:
             for member in self.chatroom.members.all():
@@ -33,6 +50,10 @@ class ChatroomConsumer(WebsocketConsumer):
             self.update_online_count()
 
     def receive(self, text_data=None, bytes_data=None):
+        if not can_access_chatroom(self.user, self.chatroom):
+            self.close()
+            return
+
         text_data = json.loads(text_data)
         message = text_data['message']
 
@@ -43,9 +64,9 @@ class ChatroomConsumer(WebsocketConsumer):
         )
         event = {
             'type': 'message_handler',
-            'chat': chat,
-            'chatroom':self.chatroom,
-            'other_member':self.other_member
+            'message_id': chat.id,
+            'chatroom_id': str(self.chatroom.id),
+            'other_member_id': self.other_member.id if self.other_member else None
         }
 
         async_to_sync(self.channel_layer.group_send)(
@@ -54,7 +75,7 @@ class ChatroomConsumer(WebsocketConsumer):
         update_data = {
             'private': self.chatroom.is_private,
             'chatroom_name': self.chatroom.name,
-            'members': self.chatroom.members,
+            'member_ids': list(self.chatroom.members.values_list('id', flat=True)),
         }
 
         for member in self.chatroom.members.all():
@@ -62,10 +83,10 @@ class ChatroomConsumer(WebsocketConsumer):
                 self.broadcast_sidebar_update(member.id, update_data)
 
     def message_handler(self, event):
-        print('handler')
-        chat = event['chat']
-        chatroom = event['chatroom']
-        other_member = event['other_member']
+        chat = GroupMessage.objects.select_related('sender', 'group').get(id=event['message_id'])
+        chatroom = ChatGroup.objects.get(id=event['chatroom_id'])
+        other_member_id = event.get('other_member_id')
+        other_member = User.objects.get(id=other_member_id) if other_member_id else None
         context = {
             'chat': chat,
             'user': self.user,
@@ -101,7 +122,7 @@ class ChatroomConsumer(WebsocketConsumer):
             'type': 'update_sidebar_handler',
             'chatroom_name': update_data['chatroom_name'],
             'private': update_data['private'],
-            'members': update_data['members']  # Convert QuerySet to list
+            'member_ids': update_data['member_ids']
         }
         async_to_sync(channel_layer.group_send)(
             f"user_{user_id}", event)
@@ -110,6 +131,10 @@ class ChatroomConsumer(WebsocketConsumer):
 class OnlineStatusConsumer(WebsocketConsumer):
     def connect(self):
         self.user = self.scope['user']
+        if not self.user.is_authenticated:
+            self.close()
+            return
+
         self.user.profile.online_status = True
         self.user.profile.save()  # Save the change to the database
         async_to_sync(self.channel_layer.group_add)(
@@ -119,6 +144,9 @@ class OnlineStatusConsumer(WebsocketConsumer):
 
     def disconnect(self, code):
         self.user = self.scope['user']
+        if not self.user.is_authenticated:
+            return
+
         self.user.profile.online_status = False
         self.user.profile.save()  # Save the change to the database
 
@@ -129,7 +157,7 @@ class OnlineStatusConsumer(WebsocketConsumer):
     def update_sidebar_handler(self, event):
         chatroom_name = event['chatroom_name']
         private = event['private']
-        members = event['members']
+        members = User.objects.filter(id__in=event['member_ids']).select_related('profile')
         context = {
             'chatroom_name': chatroom_name,
             'members': members,

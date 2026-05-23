@@ -17,7 +17,7 @@ from channels.auth import AuthMiddlewareStack
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Strike.settings')
 
 django_app = get_asgi_application()
-from rtchat import routing
+from apps.rtchat import routing
 
 application = ProtocolTypeRouter(
     {

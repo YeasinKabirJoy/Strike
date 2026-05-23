@@ -1,10 +1,10 @@
 from django.apps import AppConfig
 
 
-class UsersConfig(AppConfig):
+class RtchatConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'users'
+    name = "apps.rtchat"
+    label = "rtchat"
 
     def ready(self):
-        import users.signals
-
+        import apps.rtchat.signals

@@ -55,6 +55,21 @@ If your project is already in an existing python3 virtualenv first install djang
     
 ### Install Dependencies
     $ pip install -r requirements.txt
+
+### Environment Variables
+
+Create a local `.env` file from the example file:
+
+    $ cp .env.example .env
+
+For production, set these values in your hosting provider instead of committing them:
+
+    DJANGO_ENV=production
+    DEBUG=False
+    SECRET_KEY=<generate-a-strong-secret>
+    ALLOWED_HOSTS=your-domain.com
+    CSRF_TRUSTED_ORIGINS=https://your-domain.com
+    CORS_ALLOWED_ORIGINS=https://your-domain.com
     
 ### Running the Project
 

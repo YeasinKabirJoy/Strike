@@ -2,7 +2,7 @@
 
 import django.db.models.deletion
 import functools
-import rtchat.models
+import apps.rtchat.models
 import uuid
 from django.conf import settings
 from django.db import migrations, models
@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='ChatGroup',
             fields=[
-                ('name', models.CharField(blank=True, default=functools.partial(rtchat.models.short_uuid, *(), **{'length': 10}), max_length=100, unique=True)),
+                ('name', models.CharField(blank=True, default=functools.partial(apps.rtchat.models.short_uuid, *(), **{'length': 10}), max_length=100, unique=True)),
                 ('groupchat_name', models.CharField(blank=True, max_length=100, null=True)),
                 ('is_private', models.BooleanField(default=False)),
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True)),
@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
             name='GroupMessage',
             fields=[
                 ('message', models.TextField()),
-                ('id', models.CharField(default=functools.partial(rtchat.models.short_uuid, *(), **{'length': 18}), editable=False, max_length=18, primary_key=True, serialize=False, unique=True)),
+                ('id', models.CharField(default=functools.partial(apps.rtchat.models.short_uuid, *(), **{'length': 18}), editable=False, max_length=18, primary_key=True, serialize=False, unique=True)),
                 ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='messages', to='rtchat.chatgroup')),
                 ('sender', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
             ],
