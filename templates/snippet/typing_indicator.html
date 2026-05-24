@@ -1,0 +1,5 @@
+<span id="typing-indicator" hx-swap-oob="innerHTML">
+    {% if is_typing %}
+        <em>{{ typing_user.profile.get_name }} is typing...</em>
+    {% endif %}
+</span>

@@ -1,7 +1,7 @@
 {% load static %}
 
-					<div id="{{ chatroom_name }}" class="chatroom_name" hx-swap-oob="afterbegin">
-                        <a href="" class="list-group-item list-group-item-action border-0">
+					<div id="chatroom-{{ chatroom_name }}" class="chatroom_name" hx-swap-oob="afterbegin">
+                        <a href="{% url 'chatroom' chatroom_name %}" class="list-group-item list-group-item-action border-0">
 						<div class="d-flex align-items-start">
 							<img src="{% static 'images/group.png' %}" class="rounded-circle mr-1" alt="William Harris" width="40" height="40">
 							<div class="flex-grow-1 ml-3">

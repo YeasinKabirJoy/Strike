@@ -23,7 +23,7 @@
 
 					<div id="chatroom-container">
                             {% for chatroom in user.chat_groups.all %}
-                        {% if chatroom.is_private %}
+                        {% if chatroom.is_private and chatroom.messages.exists %}
                             {% for member in chatroom.members.all %}
                                 {% if member != user %}
                                     {% include 'snippet/chat-members.html' %}

@@ -48,7 +48,7 @@
 
                        <div id="chatroom-container">
                             {% for chatroom in user.chat_groups.all %}
-                        {% if chatroom.is_private %}
+                        {% if chatroom.is_private and chatroom.messages.exists %}
                             {% for member in chatroom.members.all %}
                                 {% if member != user %}
                                     {% include 'snippet/chat-members.html' %}
@@ -75,7 +75,6 @@
                                 {% else %}
                                     <strong class="text-white"><span id="online-count">0</span> Online</strong>
                                 {% endif %}
-{#								<div class="text-muted small"><em>Typing...</em></div>#}
 							</div>
 
                              <div class="position-absolute w-100 text-center" style="left: 45%; transform: translateX(-50%);">
@@ -153,6 +152,10 @@
                                 {% endfor %}
                         </div>
 
+                    </div>
+
+                    <div class="px-4 pt-2 small" style="min-height: 24px; color: #A5B4FC;">
+                        <span id="typing-indicator"></span>
                     </div>
 
                     <div class="flex-grow-0 pt-3 pb-4 px-4 border-top mb-2">

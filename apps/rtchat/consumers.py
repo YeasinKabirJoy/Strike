@@ -54,8 +54,15 @@ class ChatroomConsumer(WebsocketConsumer):
             self.close()
             return
 
-        text_data = json.loads(text_data)
-        message = text_data['message']
+        data = json.loads(text_data)
+        event_type = data.get('type', 'chat.message')
+        if event_type == 'chat.typing':
+            self.broadcast_typing(bool(data.get('is_typing')))
+            return
+
+        message = data.get('message', '').strip()
+        if not message:
+            return
 
         chat = GroupMessage.objects.create(
             sender=self.user,
@@ -82,6 +89,16 @@ class ChatroomConsumer(WebsocketConsumer):
             if member.profile.online_status:
                 self.broadcast_sidebar_update(member.id, update_data)
 
+    def broadcast_typing(self, is_typing):
+        event = {
+            'type': 'typing_handler',
+            'user_id': self.user.id,
+            'is_typing': is_typing,
+        }
+        async_to_sync(self.channel_layer.group_send)(
+            self.chatroom_name, event
+        )
+
     def message_handler(self, event):
         chat = GroupMessage.objects.select_related('sender', 'group').get(id=event['message_id'])
         chatroom = ChatGroup.objects.get(id=event['chatroom_id'])
@@ -95,6 +112,22 @@ class ChatroomConsumer(WebsocketConsumer):
 
         }
         html = render_to_string('../templates/snippet/message_ws.html', context)
+        self.send(text_data=html)
+
+    def typing_handler(self, event):
+        if event['user_id'] == self.user.id:
+            return
+
+        try:
+            typing_user = User.objects.select_related('profile').get(id=event['user_id'])
+        except User.DoesNotExist:
+            return
+
+        context = {
+            'typing_user': typing_user,
+            'is_typing': event['is_typing'],
+        }
+        html = render_to_string('snippet/typing_indicator.html', context)
         self.send(text_data=html)
 
     def update_online_count(self):
@@ -141,6 +174,7 @@ class OnlineStatusConsumer(WebsocketConsumer):
             f"user_{self.user.id}", self.channel_name
         )
         self.accept()
+        self.broadcast_presence_update()
 
     def disconnect(self, code):
         self.user = self.scope['user']
@@ -153,6 +187,28 @@ class OnlineStatusConsumer(WebsocketConsumer):
         async_to_sync(self.channel_layer.group_discard)(
             f"user_{self.user.id}", self.channel_name
         )
+        self.broadcast_presence_update()
+
+    def broadcast_presence_update(self):
+        channel_layer = get_channel_layer()
+        private_chatrooms = (
+            self.user.chat_groups
+            .filter(is_private=True, messages__isnull=False)
+            .distinct()
+            .prefetch_related('members')
+        )
+        for chatroom in private_chatrooms:
+            member_ids = list(chatroom.members.values_list('id', flat=True))
+            event = {
+                'type': 'update_sidebar_handler',
+                'chatroom_name': chatroom.name,
+                'private': True,
+                'member_ids': member_ids,
+            }
+            for member_id in member_ids:
+                async_to_sync(channel_layer.group_send)(
+                    f"user_{member_id}", event
+                )
 
     def update_sidebar_handler(self, event):
         chatroom_name = event['chatroom_name']

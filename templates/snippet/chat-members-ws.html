@@ -1,6 +1,6 @@
 
-					<div id="{{ chatroom_name }}" class="chatroom_name" hx-swap-oob="true" >
-                        <a href="" class="list-group-item list-group-item-action border-0">
+					<div id="chatroom-{{ chatroom_name }}" class="chatroom_name" hx-swap-oob="true" >
+                        <a href="{% url 'chatroom' chatroom_name %}" class="list-group-item list-group-item-action border-0">
 						{% for member in members.all %}
                             {% if member != user %}
                                 <div class="d-flex align-items-start">

@@ -19,31 +19,14 @@
 
     });
 
-document.addEventListener("htmx:oobBeforeSwap", (event) => {
+document.addEventListener("htmx:oobAfterSwap", (event) => {
     if (event.target.classList.contains('chatroom_name')) {
-        const removeDivId = event.target.id;
-
-        // Prevent the default swap behavior
-        event.preventDefault();
-
-        // Get the div to be removed
-        const removedDiv = document.getElementById(removeDivId);
-
-        // Get the target container where you want to insert the div
+        const updatedDiv = event.target;
         const chatContainer = document.getElementById('chatroom-container');
 
-        if (removedDiv && chatContainer) {
-            // Check if the first child is an element and compare the ids
-            const firstChild = chatContainer.firstChild;
-
-            // Check if the first child exists and its id is not the same as removedDiv's id
-            if (firstChild && firstChild.id !== removedDiv.id) {
-                // Remove the div from its current position
-                removedDiv.remove();
-                removedDiv.classList.add('fade-in-up');
-                // Insert the removed div as the first child of chatContainer
-                chatContainer.insertBefore(removedDiv, firstChild);
-            }
+        if (updatedDiv && chatContainer && chatContainer.firstElementChild !== updatedDiv) {
+            updatedDiv.classList.add('fade-in-up');
+            chatContainer.insertBefore(updatedDiv, chatContainer.firstElementChild);
         }
     }
 });
@@ -75,8 +58,45 @@ document.addEventListener("DOMContentLoaded", () => {
     const attachButton = document.getElementById("attach-button");
     const messageInput = document.getElementById("message-input");
     const filesPreview = document.getElementById("files-preview");
+    const form = document.getElementById("send-chat-form");
+
+    if (!fileInput || !attachButton || !messageInput || !filesPreview || !form) {
+        return;
+    }
 
     let selectedFiles = []; // Array to store selected files
+    let typingTimeout = null;
+    let isTyping = false;
+    const currentChatroomName = typeof chatroom_name === "undefined" ? null : chatroom_name;
+    const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const chatSocket = currentChatroomName
+        ? new WebSocket(`${wsProtocol}://${window.location.host}/ws/chatroom/${currentChatroomName}/`)
+        : null;
+
+    function sendChatSocketEvent(payload) {
+        if (!chatSocket) {
+            return;
+        }
+
+        const sendPayload = () => chatSocket.send(JSON.stringify(payload));
+        if (chatSocket.readyState === WebSocket.OPEN) {
+            sendPayload();
+        } else if (chatSocket.readyState === WebSocket.CONNECTING) {
+            chatSocket.addEventListener("open", sendPayload, { once: true });
+        }
+    }
+
+    function sendTypingStatus(nextTypingStatus) {
+        if (isTyping === nextTypingStatus) {
+            return;
+        }
+
+        isTyping = nextTypingStatus;
+        sendChatSocketEvent({
+            type: "chat.typing",
+            is_typing: nextTypingStatus,
+        });
+    }
 
     // Trigger file input when attach button is clicked
     attachButton.addEventListener("click", () => {
@@ -95,6 +115,20 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         updateUI();
+    });
+
+    messageInput.addEventListener("input", () => {
+        if (messageInput.readOnly) {
+            return;
+        }
+
+        clearTimeout(typingTimeout);
+        if (messageInput.value.trim()) {
+            sendTypingStatus(true);
+            typingTimeout = setTimeout(() => sendTypingStatus(false), 1200);
+        } else {
+            sendTypingStatus(false);
+        }
     });
 
     // Update the UI: text input and file preview
@@ -170,7 +204,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Handle form submission
-    const form = document.getElementById("send-chat-form");
     form.addEventListener("submit", (event) => {
         event.preventDefault();
 
@@ -206,13 +239,22 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             // Handle text message via WebSocket
             const textInput = form.querySelector("[name='message']");
-            const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
-            const ws = new WebSocket(`${wsProtocol}://${window.location.host}/ws/chatroom/${chatroom_name}/`);
+            sendChatSocketEvent({
+                type: "chat.message",
+                message: textInput.value.trim(),
+            });
+            textInput.value = ""; // Clear the text input
+            clearTimeout(typingTimeout);
+            sendTypingStatus(false);
+        }
+    });
 
-            ws.onopen = () => {
-                ws.send(JSON.stringify({ message: textInput.value.trim() }));
-                textInput.value = ""; // Clear the text input
-            };
+    window.addEventListener("beforeunload", () => {
+        if (isTyping && chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({
+                type: "chat.typing",
+                is_typing: false,
+            }));
         }
     });
 });
