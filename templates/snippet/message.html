@@ -1,9 +1,11 @@
 {% if chat.sender == user %}
-    <div class="chat-message-right pb-4 d-flex align-items-start justify-content-end">
+    <div id="message-{{ chat.id }}" class="chat-message-right pb-4 d-flex align-items-start justify-content-end"{% if oob %} hx-swap-oob="outerHTML"{% endif %}>
         <div>
             <div class="text-right small mb-1 px-2 font-weight-bold" style="color: #E0E7FF; font-size: 0.8rem; letter-spacing: 0.3px;">You</div>
             <div class="msg-bubble-right mr-2">
-                {% if chat.file %}
+                {% if chat.is_deleted %}
+                    <div class="message-text text-muted font-italic">Message deleted</div>
+                {% elif chat.file %}
                     {% if chat.file_type == "image" %}
                         <img class="rounded my-1 shadow-sm" style="max-width: 100%; height: auto; max-height: 250px; object-fit: cover; display: block;" src="{{ chat.file.url }}">
                     {% elif chat.file_type == "video" %}
@@ -17,17 +19,28 @@
                     <div class="message-text">{{ chat.message }}</div>
                 {% endif %}
             </div>
-            <div class="under text-muted small mt-1 px-2 text-right" style="font-size: 0.75rem;">@{{ chat.sender.username }}</div>
+            <div class="under text-muted small mt-1 px-2 text-right" style="font-size: 0.75rem;">
+                @{{ chat.sender.username }}{% if chat.is_edited and not chat.is_deleted %} · edited{% endif %}
+                {% if not chat.file and not chat.is_deleted %}
+                    <button type="button" class="btn btn-link btn-sm p-0 ml-2 text-muted message-edit-button" data-message-id="{{ chat.id }}" data-message-text="{{ chat.message|escape }}">Edit</button>
+                    <button type="button" class="btn btn-link btn-sm p-0 ml-2 text-muted message-delete-button" data-message-id="{{ chat.id }}">Delete</button>
+                {% endif %}
+            </div>
+            {% if chatroom.is_private and seen_message_id == chat.id %}
+                <div class="small mt-1 px-2 text-right" style="color: #A5B4FC; font-size: 0.72rem;">Seen</div>
+            {% endif %}
         </div>
         <img src="{{ user.profile.avatar }}" class="rounded-circle ml-2 shadow-sm mt-1" style="border: 2px solid var(--accent-primary);" alt="{{ user.get_name }}" width="40" height="40">
     </div>
 {% else %}
-    <div class="chat-message-left pb-4 d-flex align-items-start">
+    <div id="message-{{ chat.id }}" class="chat-message-left pb-4 d-flex align-items-start"{% if oob %} hx-swap-oob="outerHTML"{% endif %}>
         <img src="{{ chat.sender.profile.avatar }}" class="rounded-circle mr-2 shadow-sm mt-1" style="border: 2px solid #38BDF8;" alt="{{ chat.sender.profile.get_name }}" width="40" height="40">
         <div>
             <div class="text-left small mb-1 px-2 font-weight-bold" style="color: #38BDF8; font-size: 0.8rem; letter-spacing: 0.3px;">{{ chat.sender.profile.get_name }}</div>
             <div class="msg-bubble-left ml-2">
-                {% if chat.file %}
+                {% if chat.is_deleted %}
+                    <div class="message-text text-muted font-italic">Message deleted</div>
+                {% elif chat.file %}
                     {% if chat.file_type == "image" %}
                         <img class="rounded my-1 shadow-sm" style="max-width: 100%; height: auto; max-height: 250px; object-fit: cover; display: block;" src="{{ chat.file.url }}">
                     {% elif chat.file_type == "video" %}
@@ -41,7 +54,7 @@
                     <div class="message-text">{{ chat.message }}</div>
                 {% endif %}
             </div>
-            <div class="under text-muted small mt-1 px-2 text-left" style="font-size: 0.75rem;">@{{ chat.sender.username }}</div>
+            <div class="under text-muted small mt-1 px-2 text-left" style="font-size: 0.75rem;">@{{ chat.sender.username }}{% if chat.is_edited and not chat.is_deleted %} · edited{% endif %}</div>
         </div>
     </div>
 {% endif %}

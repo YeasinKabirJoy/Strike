@@ -1,8 +1,12 @@
 from channels.generic.websocket import WebsocketConsumer
 from channels.layers import get_channel_layer
 from django.contrib.auth import get_user_model
+from django.db.models import F
 from django.shortcuts import get_object_or_404
-from .models import ChatGroup, GroupMessage
+from django.utils import timezone
+from .models import ChatGroup, GroupMessage, PrivateChatReadState
+from apps.users.models import Profile
+from .utils import get_other_private_member, get_seen_message_id
 import json
 from django.template.loader import render_to_string
 from asgiref.sync import async_to_sync
@@ -31,9 +35,7 @@ class ChatroomConsumer(WebsocketConsumer):
 
         self.other_member = None
         if self.chatroom.is_private:
-            for member in self.chatroom.members.all():
-                if member != self.user:
-                    self.other_member = member
+            self.other_member = get_other_private_member(self.chatroom, self.user)
         async_to_sync(self.channel_layer.group_add)(self.chatroom_name, self.channel_name)
 
 
@@ -58,6 +60,15 @@ class ChatroomConsumer(WebsocketConsumer):
         event_type = data.get('type', 'chat.message')
         if event_type == 'chat.typing':
             self.broadcast_typing(bool(data.get('is_typing')))
+            return
+        if event_type == 'chat.message_edit':
+            self.edit_message(data)
+            return
+        if event_type == 'chat.message_delete':
+            self.delete_message(data)
+            return
+        if event_type == 'chat.mark_read':
+            self.mark_read()
             return
 
         message = data.get('message', '').strip()
@@ -99,8 +110,57 @@ class ChatroomConsumer(WebsocketConsumer):
             self.chatroom_name, event
         )
 
+    def get_owned_text_message(self, message_id):
+        return GroupMessage.objects.filter(
+            id=message_id,
+            group=self.chatroom,
+            sender=self.user,
+            file__isnull=True,
+            is_deleted=False,
+        ).first()
+
+    def edit_message(self, data):
+        message_id = data.get('message_id')
+        message_text = data.get('message', '').strip()
+        if not message_id or not message_text:
+            return
+
+        chat = self.get_owned_text_message(message_id)
+        if not chat:
+            return
+
+        chat.message = message_text
+        chat.is_edited = True
+        chat.save(update_fields=['message', 'is_edited'])
+        self.broadcast_message_update(chat.id)
+
+    def delete_message(self, data):
+        message_id = data.get('message_id')
+        if not message_id:
+            return
+
+        chat = self.get_owned_text_message(message_id)
+        if not chat:
+            return
+
+        chat.message = ''
+        chat.is_deleted = True
+        chat.save(update_fields=['message', 'is_deleted'])
+        self.broadcast_message_update(chat.id)
+
+    def broadcast_message_update(self, message_id):
+        event = {
+            'type': 'message_update_handler',
+            'message_id': message_id,
+            'chatroom_id': str(self.chatroom.id),
+            'other_member_id': self.other_member.id if self.other_member else None
+        }
+        async_to_sync(self.channel_layer.group_send)(
+            self.chatroom_name, event
+        )
+
     def message_handler(self, event):
-        chat = GroupMessage.objects.select_related('sender', 'group').get(id=event['message_id'])
+        chat = GroupMessage.objects.select_related('sender', 'sender__profile', 'group').get(id=event['message_id'])
         chatroom = ChatGroup.objects.get(id=event['chatroom_id'])
         other_member_id = event.get('other_member_id')
         other_member = User.objects.get(id=other_member_id) if other_member_id else None
@@ -108,10 +168,27 @@ class ChatroomConsumer(WebsocketConsumer):
             'chat': chat,
             'user': self.user,
             'chatroom':chatroom,
-            'other_member':other_member
+            'other_member':other_member,
+            'seen_message_id': get_seen_message_id(chatroom, self.user, other_member),
 
         }
         html = render_to_string('../templates/snippet/message_ws.html', context)
+        self.send(text_data=html)
+
+    def message_update_handler(self, event):
+        chat = GroupMessage.objects.select_related('sender', 'sender__profile', 'group').get(id=event['message_id'])
+        chatroom = ChatGroup.objects.get(id=event['chatroom_id'])
+        other_member_id = event.get('other_member_id')
+        other_member = User.objects.get(id=other_member_id) if other_member_id else None
+        context = {
+            'chat': chat,
+            'user': self.user,
+            'chatroom': chatroom,
+            'other_member': other_member,
+            'oob': True,
+            'seen_message_id': get_seen_message_id(chatroom, self.user, other_member),
+        }
+        html = render_to_string('snippet/message.html', context)
         self.send(text_data=html)
 
     def typing_handler(self, event):
@@ -149,6 +226,81 @@ class ChatroomConsumer(WebsocketConsumer):
         html = render_to_string('../templates/snippet/online_count.html', context)
         self.send(text_data=html)
 
+    def private_presence_handler(self, event):
+        if not self.chatroom.is_private or not self.other_member:
+            return
+
+        self.other_member.profile.refresh_from_db()
+        context = {
+            'other_member': self.other_member,
+        }
+        html = render_to_string('snippet/private_chat_presence.html', context)
+        self.send(text_data=html)
+
+    def mark_read(self):
+        if not self.chatroom.is_private:
+            return
+
+        latest_message = (
+            self.chatroom.messages
+            .order_by('-created_at', '-id')
+            .first()
+        )
+        if not latest_message:
+            return
+
+        read_state, _ = PrivateChatReadState.objects.get_or_create(
+            group=self.chatroom,
+            user=self.user,
+        )
+        previous_message_id = read_state.last_read_message_id
+        if previous_message_id == latest_message.id:
+            return
+
+        read_state.last_read_message = latest_message
+        read_state.save(update_fields=['last_read_message', 'updated_at'])
+
+        event = {
+            'type': 'read_receipt_handler',
+            'reader_id': self.user.id,
+            'previous_message_id': previous_message_id,
+            'message_id': latest_message.id,
+        }
+        async_to_sync(self.channel_layer.group_send)(self.chatroom_name, event)
+
+    def read_receipt_handler(self, event):
+        if event['reader_id'] == self.user.id or not self.chatroom.is_private:
+            return
+
+        message_ids = [message_id for message_id in [
+            event.get('previous_message_id'),
+            event.get('message_id'),
+        ] if message_id]
+        if not message_ids:
+            return
+
+        seen_message_id = get_seen_message_id(self.chatroom, self.user, self.other_member)
+        for message_id in dict.fromkeys(message_ids):
+            chat = (
+                GroupMessage.objects
+                .select_related('sender', 'sender__profile', 'group')
+                .filter(id=message_id, group=self.chatroom)
+                .first()
+            )
+            if not chat:
+                continue
+
+            context = {
+                'chat': chat,
+                'user': self.user,
+                'chatroom': self.chatroom,
+                'other_member': self.other_member,
+                'oob': True,
+                'seen_message_id': seen_message_id,
+            }
+            html = render_to_string('snippet/message.html', context)
+            self.send(text_data=html)
+
     def broadcast_sidebar_update(self, user_id, update_data):
         channel_layer = get_channel_layer()
         event = {
@@ -164,12 +316,17 @@ class ChatroomConsumer(WebsocketConsumer):
 class OnlineStatusConsumer(WebsocketConsumer):
     def connect(self):
         self.user = self.scope['user']
+        self.is_connected = False
         if not self.user.is_authenticated:
             self.close()
             return
 
-        self.user.profile.online_status = True
-        self.user.profile.save()  # Save the change to the database
+        Profile.objects.filter(user=self.user).update(
+            online_connections=F('online_connections') + 1,
+            online_status=True,
+        )
+        self.user.profile.refresh_from_db()
+        self.is_connected = True
         async_to_sync(self.channel_layer.group_add)(
             f"user_{self.user.id}", self.channel_name
         )
@@ -178,11 +335,17 @@ class OnlineStatusConsumer(WebsocketConsumer):
 
     def disconnect(self, code):
         self.user = self.scope['user']
-        if not self.user.is_authenticated:
+        if not self.user.is_authenticated or not getattr(self, 'is_connected', False):
             return
 
-        self.user.profile.online_status = False
-        self.user.profile.save()  # Save the change to the database
+        Profile.objects.filter(user=self.user, online_connections__gt=0).update(
+            online_connections=F('online_connections') - 1
+        )
+        self.user.profile.refresh_from_db()
+        if self.user.profile.online_connections == 0:
+            self.user.profile.online_status = False
+            self.user.profile.last_seen = timezone.now()
+            self.user.profile.save(update_fields=['online_status', 'last_seen'])
 
         async_to_sync(self.channel_layer.group_discard)(
             f"user_{self.user.id}", self.channel_name
@@ -209,6 +372,10 @@ class OnlineStatusConsumer(WebsocketConsumer):
                 async_to_sync(channel_layer.group_send)(
                     f"user_{member_id}", event
                 )
+            async_to_sync(channel_layer.group_send)(
+                chatroom.name,
+                {'type': 'private_presence_handler'}
+            )
 
     def update_sidebar_handler(self, event):
         chatroom_name = event['chatroom_name']

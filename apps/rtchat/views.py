@@ -3,13 +3,75 @@ from .models import ChatGroup,GroupMessage,GroupChatRequest
 from .forms import GroupChatInputForm,GroupCreationForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.http.response import Http404, HttpResponse, JsonResponse
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 from .consumers import can_access_chatroom
+from .utils import get_other_private_member, get_seen_message_id
+from PIL import Image, UnidentifiedImageError
+from django.utils.dateparse import parse_datetime
 # Create your views here.
 
 User = get_user_model()
+CHAT_MESSAGES_PAGE_SIZE = 30
+
+MAX_CHAT_IMAGE_SIZE = 5 * 1024 * 1024
+ALLOWED_CHAT_IMAGE_TYPES = {
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+}
+
+
+def validate_chat_image(file):
+    if file.size > MAX_CHAT_IMAGE_SIZE:
+        return f'{file.name} is larger than 5MB.'
+
+    if file.content_type not in ALLOWED_CHAT_IMAGE_TYPES:
+        return f'{file.name} must be a JPG, PNG, GIF, or WebP image.'
+
+    try:
+        Image.open(file).verify()
+    except (UnidentifiedImageError, OSError):
+        return f'{file.name} is not a valid image file.'
+    finally:
+        file.seek(0)
+
+    return None
+
+
+def get_chat_messages_queryset(group):
+    return group.messages.select_related('sender', 'sender__profile').order_by('-created_at', '-id')
+
+
+def get_chat_messages_context(group, *, query=''):
+    chats_queryset = get_chat_messages_queryset(group)
+    query = query.strip()
+
+    if query:
+        chats = list(
+            chats_queryset.filter(message__icontains=query, is_deleted=False)[:CHAT_MESSAGES_PAGE_SIZE]
+        )
+        chats.reverse()
+        return {
+            'chats': chats,
+            'has_more_messages': False,
+            'search_mode': True,
+            'search_query': query,
+        }
+
+    chats = list(chats_queryset[:CHAT_MESSAGES_PAGE_SIZE])
+    chats.reverse()
+    return {
+        'chats': chats,
+        'has_more_messages': chats_queryset.count() > CHAT_MESSAGES_PAGE_SIZE,
+        'search_mode': False,
+        'search_query': '',
+    }
+
+
 def test(request):
     return render(request,'users/search.html')
 
@@ -22,7 +84,6 @@ def home(request):
 @login_required
 def chatroom(request,chatroom_name='public-chat'):
     group = get_object_or_404(ChatGroup,name=chatroom_name)
-    chats = group.messages.all()
     form = GroupChatInputForm()
     is_private = group.is_private
     other_member = None
@@ -31,9 +92,7 @@ def chatroom(request,chatroom_name='public-chat'):
     if is_private:
         if request.user not in group.members.all():
             raise Http404()
-        for member in group.members.all():
-            if member!=request.user:
-                other_member = member
+        other_member = get_other_private_member(group, request.user)
 
     if groupchat_name:
         if request.user not in group.members.all():
@@ -47,14 +106,68 @@ def chatroom(request,chatroom_name='public-chat'):
 
             # group.members.add(request.user)
 
-    context = {
-        'chats': chats,
+    context = get_chat_messages_context(group)
+    context.update({
         'form':form,
         'chatroom':group,
         'other_member':other_member,
-
-    }
+        'seen_message_id': get_seen_message_id(group, request.user, other_member),
+    })
     return render(request, 'rtchat/chat.html', context)
+
+
+@login_required
+def chatroom_messages(request, chatroom_name):
+    group = get_object_or_404(ChatGroup, name=chatroom_name)
+    if not can_access_chatroom(request.user, group):
+        raise Http404()
+    other_member = get_other_private_member(group, request.user)
+
+    before_created_at = parse_datetime(request.GET.get('before_created_at', ''))
+    before_id = request.GET.get('before_id', '')
+    if not before_created_at or not before_id:
+        return JsonResponse({"error": "Invalid pagination cursor."}, status=400)
+
+    chats_queryset = (
+        group.messages
+        .select_related('sender', 'sender__profile')
+        .filter(
+            Q(created_at__lt=before_created_at) |
+            Q(created_at=before_created_at, id__lt=before_id)
+        )
+        .order_by('-created_at', '-id')
+    )
+    chats = list(chats_queryset[:CHAT_MESSAGES_PAGE_SIZE + 1])
+    has_more_messages = len(chats) > CHAT_MESSAGES_PAGE_SIZE
+    chats = chats[:CHAT_MESSAGES_PAGE_SIZE]
+    chats.reverse()
+
+    context = {
+        'chats': chats,
+        'has_more_messages': has_more_messages,
+        'search_mode': False,
+        'search_query': '',
+        'chatroom': group,
+        'other_member': other_member,
+        'seen_message_id': get_seen_message_id(group, request.user, other_member),
+    }
+    return render(request, 'snippet/older_messages.html', context)
+
+
+@login_required
+def chatroom_messages_list(request, chatroom_name):
+    group = get_object_or_404(ChatGroup, name=chatroom_name)
+    if not can_access_chatroom(request.user, group):
+        raise Http404()
+
+    context = get_chat_messages_context(group, query=request.GET.get('q', ''))
+    other_member = get_other_private_member(group, request.user)
+    context.update({
+        'chatroom': group,
+        'other_member': other_member,
+        'seen_message_id': get_seen_message_id(group, request.user, other_member),
+    })
+    return render(request, 'snippet/chat_messages_list.html', context)
 
 # sending chat is now handled by ws consumers
 @login_required
@@ -87,12 +200,18 @@ def send_chat_files(request, chatroom_name='public-chat'):
 
         # Find the other member in a private chat
         if group.is_private:
-            for member in group.members.all():
-                if member != request.user:
-                    other_member = member
+            other_member = get_other_private_member(group, request.user)
 
         # Handle uploaded files
         files = request.FILES.getlist("files")  # Use `getlist` to retrieve multiple files
+        if not files:
+            return JsonResponse({"error": "No files were uploaded."}, status=400)
+
+        for file in files:
+            error = validate_chat_image(file)
+            if error:
+                return JsonResponse({"error": error}, status=400)
+
         for file in files:
             message = GroupMessage.objects.create(sender=request.user, group=group, file=file)
             event = {

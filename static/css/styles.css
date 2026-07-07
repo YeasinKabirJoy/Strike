@@ -266,3 +266,16 @@ nav {
 hr {
     border-top: 1px solid var(--border-color);
 }
+
+/* ==========================================
+   MOBILE & TABLET RESPONSIVENESS
+   ========================================== */
+@media (max-width: 991.98px) {
+    nav {
+        margin: 5px auto 10px auto;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        top: 5px;
+        border-radius: 0.75rem;
+    }
+}

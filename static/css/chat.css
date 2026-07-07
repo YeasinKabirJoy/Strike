@@ -246,3 +246,28 @@
 .panel .form-control::placeholder {
     color: var(--text-muted);
 }
+
+/* ==========================================
+   MOBILE & TABLET RESPONSIVENESS
+   ========================================== */
+@media (max-width: 991.98px) {
+    #chat-container, .panel {
+        min-height: calc(100vh - 140px) !important;
+        max-height: calc(100vh - 140px) !important;
+        border-radius: 1rem;
+    }
+    
+    .chat-messages {
+        min-height: calc(100vh - 290px) !important;
+        max-height: calc(100vh - 290px) !important;
+        padding: 1rem;
+    }
+
+    .msg-bubble-left, .msg-bubble-right {
+        max-width: 95%;
+    }
+    
+    .chat-message-left, .chat-message-right {
+        margin-bottom: 0.75rem;
+    }
+}

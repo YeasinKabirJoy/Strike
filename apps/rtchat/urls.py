@@ -9,13 +9,17 @@ from .views import (
     test,
     leave_group,
     delete_group,
-    send_chat_files
+    send_chat_files,
+    chatroom_messages,
+    chatroom_messages_list,
 )
 
 urlpatterns = [
     path('',home,name='home'),
     path('test/',test,name='test'),
     path('chatroom/<str:chatroom_name>/',chatroom,name='chatroom'),
+    path('chatroom/<str:chatroom_name>/messages/',chatroom_messages,name='chatroom-messages'),
+    path('chatroom/<str:chatroom_name>/messages/list/',chatroom_messages_list,name='chatroom-messages-list'),
     path('chat/',send_chat,name='chat'),
     path('chat/file/',send_chat_files,name='chat-file-public'),
     path('chat/file/<str:chatroom_name>/',send_chat_files,name='chat-file'),

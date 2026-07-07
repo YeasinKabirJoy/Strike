@@ -1,0 +1,21 @@
+{% if search_mode and not chats %}
+    <div class="text-center text-muted py-4">No messages found for "{{ search_query }}".</div>
+{% elif not search_mode and not chats %}
+    <div class="text-center text-muted py-4">No messages yet.</div>
+{% endif %}
+
+{% if has_more_messages and chats and not search_mode %}
+    <div id="older-messages-cursor"
+         data-before-created-at="{{ chats.0.created_at|date:'c' }}"
+         data-before-id="{{ chats.0.id }}">
+    </div>
+{% else %}
+    <div id="older-messages-cursor"
+         data-before-created-at=""
+         data-before-id="">
+    </div>
+{% endif %}
+
+{% for chat in chats %}
+    {% include 'snippet/message.html' %}
+{% endfor %}

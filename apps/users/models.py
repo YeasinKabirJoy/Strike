@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.templatetags.static import static
+from django.utils import timezone
+from datetime import timedelta
 
 # Create your models here.
 User = get_user_model()
@@ -15,6 +17,8 @@ class Profile(models.Model):
     bio = models.TextField(blank=True,null=True)
     created = models.DateTimeField(auto_now_add=True)
     online_status = models.BooleanField(default=False)
+    online_connections = models.PositiveIntegerField(default=0)
+    last_seen = models.DateTimeField(blank=True, null=True)
     def __str__(self):
         return str(self.user)
 
@@ -35,6 +39,25 @@ class Profile(models.Model):
             user_name = self.user.username
 
         return user_name
+
+    @property
+    def presence_label(self):
+        if self.online_status:
+            return 'Online'
+
+        if not self.last_seen:
+            return 'Offline'
+
+        local_last_seen = timezone.localtime(self.last_seen)
+        local_now = timezone.localtime()
+
+        if local_last_seen.date() == local_now.date():
+            return f'Last seen today at {local_last_seen.strftime("%I:%M %p").lstrip("0")}'
+
+        if local_last_seen.date() == (local_now - timedelta(days=1)).date():
+            return f'Last seen yesterday at {local_last_seen.strftime("%I:%M %p").lstrip("0")}'
+
+        return f'Last seen {local_last_seen.strftime("%b %d at %I:%M %p").replace(" 0", " ")}'
 
 
 # class Connections(models.Model):

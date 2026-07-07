@@ -8,11 +8,11 @@
                                 {{ member.profile.get_name }}
 								{% if member.profile.online_status %}
                                     <div class="small"><span class="fas fa-circle chat-online"></span>
-                                    Online
+                                    {{ member.profile.presence_label }}
                                 </div>
                                 {% else %}
                                     <div class="small"><span class="fas fa-circle chat-offline"></span>
-                                    Offline
+                                    {{ member.profile.presence_label }}
                                 </div>
                                 {% endif %}
 							</div>

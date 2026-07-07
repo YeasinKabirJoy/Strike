@@ -35,7 +35,7 @@
 
 		<div id="chat-container" class="card">
 			<div class="row g-0">
-				<div class="col-12 col-lg-5 col-xl-3 border-right panel">
+				<div class="d-none d-lg-block col-lg-5 col-xl-3 border-right panel">
 
 					<div class="px-4 d-none d-md-block">
 						<div class="d-flex align-items-center">
@@ -45,27 +45,27 @@
 						</div>
 					</div>
 
-
                        <div id="chatroom-container">
                             {% for chatroom in user.chat_groups.all %}
-                        {% if chatroom.is_private and chatroom.messages.exists %}
-                            {% for member in chatroom.members.all %}
-                                {% if member != user %}
-                                    {% include 'snippet/chat-members.html' %}
+                                {% if chatroom.is_private and chatroom.messages.exists %}
+                                    {% for member in chatroom.members.all %}
+                                        {% if member != user %}
+                                            {% include 'snippet/chat-members.html' %}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% elif chatroom.groupchat_name %}
+                                    {% include 'snippet/groupchat_members.html' %}
                                 {% endif %}
                             {% endfor %}
-                         {% elif chatroom.groupchat_name %}
-                            {% include 'snippet/groupchat_members.html' %}
-                        {% endif %}
-                        {% endfor %}
                        </div>
 
 
 					<hr class="d-block d-lg-none mt-1 mb-0">
 				</div>
 				<div class="col-12 col-lg-7 col-xl-9">
-					<div class="py-2 px-4 border-bottom d-none d-lg-block">
+					<div class="py-2 px-4 border-bottom">
 						<div class="d-flex align-items-center py-1">
+                            <a href="{% url 'home' %}" class="btn btn-secondary btn-sm mr-2 d-inline-flex d-lg-none align-items-center justify-content-center" style="width: 32px; height: 32px; padding: 0 !important; border-radius: 50%;"><i class="fas fa-arrow-left"></i></a>
 							<div class="position-relative">
                                 <div id="online-icon" style="width: 10px; height: 10px;"></div>
 							</div>
@@ -79,7 +79,8 @@
 
                              <div class="position-absolute w-100 text-center" style="left: 45%; transform: translateX(-50%);">
                                 {% if chatroom.is_private %}
-                                    <strong class="text-white text-monospace">{{ other_member.profile.get_name }}</strong>
+                                    <strong class="text-white text-monospace d-block">{{ other_member.profile.get_name }}</strong>
+                                    <span id="private-chat-presence" class="small" style="color: #A5B4FC;">{{ other_member.profile.presence_label }}</span>
                                 {% else %}
                                     {% if chatroom.groupchat_name %}
                                          <strong class="text-white">{{ chatroom.groupchat_name }}
@@ -142,14 +143,24 @@
 					</div>
 
                     <div class="position-relative">
+                        <div class="px-4 pt-3">
+                            <input type="text"
+                                   id="chat-search-input"
+                                   class="form-control"
+                                   placeholder="Search this chat">
+                        </div>
                         <div id="chat-ws-connection"
                              hx-ext="ws"
                              ws-connect="/ws/chatroom/{{ chatroom.name }}/">
                         </div>
-                        <div id="chat-messages" class="chat-messages p-4">
-                                {% for chat in chats %}
-                                {% include 'snippet/message.html' %}
-                                {% endfor %}
+                        <div id="chat-messages"
+                             class="chat-messages p-4"
+                             data-list-url="{% url 'chatroom-messages-list' chatroom.name %}"
+                             data-load-older-url="{% url 'chatroom-messages' chatroom.name %}"
+                             data-is-private="{% if chatroom.is_private %}true{% else %}false{% endif %}"
+                             data-search-mode="{% if search_mode %}true{% else %}false{% endif %}"
+                             data-has-more="{% if has_more_messages %}true{% else %}false{% endif %}">
+                                {% include 'snippet/chat_messages_list.html' %}
                         </div>
 
                     </div>
@@ -168,7 +179,7 @@
                             {% csrf_token %}
 
                              <!-- File Input (Hidden) -->
-                            <input id="file-input" type="file" name="files" class="d-none" multiple>
+                            <input id="file-input" type="file" name="files" class="d-none" accept="image/*" multiple>
 
                             <!-- Attach File Button -->
                             <button type="button" id="attach-button" class="btn btn-outline-light ">🔗</button>

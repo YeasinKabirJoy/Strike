@@ -54,11 +54,21 @@ document.addEventListener("htmx:oobAfterSwap", (event) => {
  //        }
 
 document.addEventListener("DOMContentLoaded", () => {
+    const maxChatImageSize = 5 * 1024 * 1024;
+    const allowedChatImageTypes = new Set([
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+    ]);
     const fileInput = document.getElementById("file-input");
     const attachButton = document.getElementById("attach-button");
     const messageInput = document.getElementById("message-input");
     const filesPreview = document.getElementById("files-preview");
     const form = document.getElementById("send-chat-form");
+    const chatMessages = document.getElementById("chat-messages");
+    const chatSearchInput = document.getElementById("chat-search-input");
+    const olderMessagesThreshold = 80;
 
     if (!fileInput || !attachButton || !messageInput || !filesPreview || !form) {
         return;
@@ -66,12 +76,105 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let selectedFiles = []; // Array to store selected files
     let typingTimeout = null;
+    let searchTimeout = null;
     let isTyping = false;
+    const isPrivateChat = chatMessages && chatMessages.dataset.isPrivate === "true";
     const currentChatroomName = typeof chatroom_name === "undefined" ? null : chatroom_name;
     const wsProtocol = window.location.protocol === "https:" ? "wss" : "ws";
     const chatSocket = currentChatroomName
         ? new WebSocket(`${wsProtocol}://${window.location.host}/ws/chatroom/${currentChatroomName}/`)
         : null;
+    let isLoadingOlderMessages = false;
+
+    async function refreshChatMessages(query = "") {
+        if (!chatMessages) {
+            return;
+        }
+
+        const params = new URLSearchParams();
+        if (query.trim()) {
+            params.set("q", query.trim());
+        }
+
+        const requestUrl = params.toString()
+            ? `${chatMessages.dataset.listUrl}?${params.toString()}`
+            : chatMessages.dataset.listUrl;
+
+        try {
+            const response = await fetch(requestUrl, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to load chat messages.");
+            }
+
+            chatMessages.innerHTML = await response.text();
+            chatMessages.dataset.searchMode = query.trim() ? "true" : "false";
+            const nextCursor = document.getElementById("older-messages-cursor");
+            chatMessages.dataset.hasMore = nextCursor && nextCursor.dataset.beforeCreatedAt ? "true" : "false";
+
+            if (!query.trim()) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                markPrivateChatRead();
+            }
+        } catch (error) {
+            console.error("Chat messages refresh failed:", error);
+        }
+    }
+
+    async function loadOlderMessages() {
+        if (!chatMessages || isLoadingOlderMessages || chatMessages.dataset.hasMore !== "true" || chatMessages.dataset.searchMode === "true") {
+            return;
+        }
+
+        const cursor = document.getElementById("older-messages-cursor");
+        if (!cursor || !cursor.dataset.beforeCreatedAt || !cursor.dataset.beforeId) {
+            chatMessages.dataset.hasMore = "false";
+            return;
+        }
+
+        isLoadingOlderMessages = true;
+        const previousScrollHeight = chatMessages.scrollHeight;
+        const previousScrollTop = chatMessages.scrollTop;
+
+        const params = new URLSearchParams({
+            before_created_at: cursor.dataset.beforeCreatedAt,
+            before_id: cursor.dataset.beforeId,
+        });
+
+        try {
+            const response = await fetch(`${chatMessages.dataset.loadOlderUrl}?${params.toString()}`, {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to load older messages.");
+            }
+
+            const html = await response.text();
+            const template = document.createElement("template");
+            template.innerHTML = html.trim();
+
+            cursor.remove();
+            chatMessages.prepend(template.content);
+
+            const nextCursor = document.getElementById("older-messages-cursor");
+            if (!nextCursor || !nextCursor.dataset.beforeCreatedAt || !nextCursor.dataset.beforeId) {
+                chatMessages.dataset.hasMore = "false";
+            }
+
+            chatMessages.scrollTop = chatMessages.scrollHeight - previousScrollHeight + previousScrollTop;
+        } catch (error) {
+            console.error("Older messages load failed:", error);
+        } finally {
+            isLoadingOlderMessages = false;
+        }
+    }
 
     function sendChatSocketEvent(payload) {
         if (!chatSocket) {
@@ -98,6 +201,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function markPrivateChatRead() {
+        if (!isPrivateChat || document.visibilityState !== "visible") {
+            return;
+        }
+
+        sendChatSocketEvent({
+            type: "chat.mark_read",
+        });
+    }
+
     // Trigger file input when attach button is clicked
     attachButton.addEventListener("click", () => {
         fileInput.click();
@@ -106,6 +219,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // Handle file selection
     fileInput.addEventListener("change", () => {
         const files = Array.from(fileInput.files);
+        const invalidFile = files.find((file) => {
+            return !allowedChatImageTypes.has(file.type) || file.size > maxChatImageSize;
+        });
+
+        if (invalidFile) {
+            alert(`${invalidFile.name} must be a JPG, PNG, GIF, or WebP image under 5MB.`);
+            fileInput.value = "";
+            selectedFiles = [];
+            updateUI();
+            return;
+        }
 
         // Add new files to the selected files list
         files.forEach((file) => {
@@ -128,6 +252,39 @@ document.addEventListener("DOMContentLoaded", () => {
             typingTimeout = setTimeout(() => sendTypingStatus(false), 1200);
         } else {
             sendTypingStatus(false);
+        }
+    });
+
+    if (chatMessages) {
+        chatMessages.addEventListener("scroll", () => {
+            if (chatMessages.scrollTop <= olderMessagesThreshold) {
+                loadOlderMessages();
+            }
+        });
+    }
+
+    if (chatSearchInput) {
+        chatSearchInput.addEventListener("input", () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                refreshChatMessages(chatSearchInput.value);
+            }, 250);
+        });
+    }
+
+    if (chatSocket) {
+        chatSocket.addEventListener("open", () => {
+            markPrivateChatRead();
+        });
+    }
+
+    document.body.addEventListener("htmx:wsAfterMessage", () => {
+        markPrivateChatRead();
+    });
+
+    document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+            markPrivateChatRead();
         }
     });
 
@@ -203,6 +360,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    document.addEventListener("click", (event) => {
+        const editButton = event.target.closest(".message-edit-button");
+        if (editButton) {
+            const currentText = editButton.dataset.messageText || "";
+            const nextText = prompt("Edit message", currentText);
+
+            if (nextText && nextText.trim() && nextText.trim() !== currentText) {
+                sendChatSocketEvent({
+                    type: "chat.message_edit",
+                    message_id: editButton.dataset.messageId,
+                    message: nextText.trim(),
+                });
+            }
+
+            return;
+        }
+
+        const deleteButton = event.target.closest(".message-delete-button");
+        if (deleteButton && confirm("Delete this message?")) {
+            sendChatSocketEvent({
+                type: "chat.message_delete",
+                message_id: deleteButton.dataset.messageId,
+            });
+        }
+    });
+
     // Handle form submission
     form.addEventListener("submit", (event) => {
         event.preventDefault();
@@ -224,7 +407,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 body: formData,
             })
-                .then((response) => response.json())
+                .then((response) => {
+                    return response.json().then((data) => {
+                        if (!response.ok) {
+                            throw new Error(data.error || "File upload failed.");
+                        }
+                        return data;
+                    });
+                })
                 .then((data) => {
                     // console.log("Files uploaded successfully:", data);
 
@@ -235,6 +425,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 })
                 .catch((error) => {
                     console.error("File upload failed:", error);
+                    alert(error.message);
                 });
         } else {
             // Handle text message via WebSocket

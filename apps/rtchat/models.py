@@ -42,6 +42,9 @@ class GroupMessage(models.Model):
     sender = models.ForeignKey(User,on_delete=models.SET_NULL,null=True)
     message = models.TextField(blank=True,null=True)
     file = models.FileField(upload_to='files/',blank=True,null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    is_edited = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
     id = models.CharField(default=partial(short_uuid, length=18), max_length=18,primary_key=True, editable=False, unique=True)
 
     # def __str__(self):
@@ -67,3 +70,21 @@ class GroupMessage(models.Model):
 class GroupChatRequest(models.Model):
     group = models.OneToOneField(ChatGroup,on_delete=models.CASCADE)
     request = models.ManyToManyField(User,related_name='requested_group',blank=True)
+
+
+class PrivateChatReadState(models.Model):
+    group = models.ForeignKey(ChatGroup, on_delete=models.CASCADE, related_name='read_states')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='private_chat_read_states')
+    last_read_message = models.ForeignKey(
+        GroupMessage,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='read_by_states',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['group', 'user'], name='unique_private_chat_read_state')
+        ]
